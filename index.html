@@ -1,0 +1,1373 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Robotics 101: Robot Motion Planning &amp; Learning</title>
+  <meta name="description" content="A 48-slide self-study course on how a robot arm decides where to move: kinematics, control, classical motion planning, learned policies and simulation, with 12 running demos and 6 Python labs.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2310202B'/%3E%3Cpath d='M8 24 L14 13 L23 9' fill='none' stroke='%237DB3FF' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='14' cy='13' r='2.5' fill='%2310202B' stroke='%23E9EEF0' stroke-width='1.5'/%3E%3Ccircle cx='23' cy='9' r='2.5' fill='%23FF9A5C'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/viewer.css">
+  <link rel="stylesheet" href="assets/deck.css">
+</head>
+<body>
+  <noscript><p class="noscript">This slide deck needs JavaScript to page through its slides and run its demos.</p></noscript>
+
+  <main class="stage" aria-label="Slides">
+    <div class="deck">
+<!-- 1 · cover -->
+<section id="cover" class="dark bare" data-transition="fade" style="justify-content:center; gap:36px">
+<svg aria-label="A two-link robot arm whose tip follows a curved path around an obstacle to reach a goal" style="position:absolute; left:1240px; top:230px" width="552" height="620" viewBox="0 0 552 620">
+<g fill="none" stroke="#24404F" stroke-width="2">
+<path d="M330 300 L300 262 L262 250 M300 262 L318 226 L296 196 M318 226 L352 204 M262 250 L232 214 L196 208 M232 214 L240 176 L214 148 M240 176 L276 150 L282 112 M276 150 L312 134 M196 208 L170 240 M214 148 L176 138 M282 112 L318 92 L356 100 M318 92 L310 56"/>
+</g>
+<circle cx="382" cy="208" r="44" fill="#1A2F3D" stroke="#36505F" stroke-width="2"/>
+<path d="M330 300 C 270 220, 290 110, 420 112" fill="none" stroke="#FF9A5C" stroke-width="4" stroke-dasharray="4 12" stroke-linecap="round"/>
+<circle cx="420" cy="112" r="16" fill="none" stroke="#FF9A5C" stroke-width="4"/>
+<circle cx="420" cy="112" r="5" fill="#FF9A5C"/>
+<path d="M60 590 L180 590" stroke="#A9BAC2" stroke-width="6" stroke-linecap="round"/>
+<path d="M120 590 L120 540" stroke="#A9BAC2" stroke-width="22" stroke-linecap="round"/>
+<path d="M120 540 L210 400" stroke="#7DB3FF" stroke-width="20" stroke-linecap="round"/>
+<path d="M210 400 L330 300" stroke="#7DB3FF" stroke-width="16" stroke-linecap="round"/>
+<circle cx="120" cy="540" r="16" fill="#10202B" stroke="#E9EEF0" stroke-width="5"/>
+<circle cx="210" cy="400" r="14" fill="#10202B" stroke="#E9EEF0" stroke-width="5"/>
+<circle cx="330" cy="300" r="10" fill="#E9EEF0">
+<animateMotion dur="5s" begin="1s" repeatCount="indefinite" path="M0 0 C -60 -80, -40 -190, 90 -188" keyPoints="0;1;1" keyTimes="0;0.7;1" calcMode="linear"/>
+</circle>
+</svg>
+<p class="eyebrow">A self-study course, from first principles</p>
+<h1 style="width:1100px">Robot Motion Planning &amp; Learning 101</h1>
+<p class="lead soft" style="width:1000px">How a robot arm decides where to move: kinematics, control, classical planners, learned policies, simulation and code labs.</p>
+<p class="cap" style="width:1000px">48 slides · 12 self-running demos · 6 Python labs</p>
+</section>
+<!-- 2 · map -->
+<section id="map" data-transition="fade" style="gap:28px">
+<div class="head"><p class="eyebrow">Orientation</p><h2>Course map</h2></div>
+<div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:24px">
+<div class="card in" style="--i:0"><p class="tag">Part 1 · slides 3–6</p><h3>Background</h3><p class="cap">What a robot is made of, where the field came from, and what each layer of its software does.</p></div>
+<div class="card in" style="--i:1"><p class="tag">Part 2 · slides 7–14</p><h3>Motion and control</h3><p class="cap">Kinematics, dynamics and feedback control: from joint angles to a hand that goes where it is told.</p></div>
+<div class="card in" style="--i:2"><p class="tag">Part 3 · slides 15–26</p><h3>Motion planning</h3><p class="cap">Configuration space, then the three classical families: graph search, sampling and trajectory optimization.</p></div>
+<div class="card in" style="--i:3"><p class="tag warm">Part 4 · slides 27–35</p><h3>Robot learning</h3><p class="cap">Policies learned from data: behaviour cloning, diffusion policies, reinforcement learning, sim-to-real and VLAs.</p></div>
+<div class="card in" style="--i:4"><p class="tag warm">Part 5 · slides 36–37</p><h3>Simulation</h3><p class="cap">What a physics engine computes each step, and how MuJoCo, Isaac Lab and the others differ.</p></div>
+<div class="card in" style="--i:5"><p class="tag warm">Part 6 · slides 38–48</p><h3>Hands-on</h3><p class="cap">Six Python labs from a 20-line kinematics script to training a policy, plus exercises and a study roadmap.</p></div>
+</div>
+<div class="row" style="align-items:center; gap:24px">
+<p class="label blue" style="white-space:nowrap">Running example</p>
+<p class="cap" style="flex:1">A two-link planar arm carries every idea in Parts 2 and 3, because its whole configuration space fits on a flat picture. The labs then move to a simulated arm in MuJoCo.</p>
+</div>
+<p class="foot">Robot Motion Planning &amp; Learning 101</p>
+</section>
+<!-- 3 · loop -->
+<section id="loop" data-transition="fade">
+<div class="head"><p class="eyebrow">Concept</p><h2>A robot is a feedback loop with a body</h2></div>
+<!-- Sense 0,0,272,150  Estimate 348,0,272,150  Plan 696,0,272,150  Control 1044,0,272,150  Act 1392,0,272,150  World 632,205,400,80 -->
+<div style="position:relative; width:1664px; height:290px">
+<svg aria-label="A signal travels from sensing through planning to actuation and returns through the physical world" style="position:absolute; left:0; top:0" width="1664" height="290" viewBox="0 0 1664 290">
+<circle cx="136" cy="75" r="10" fill="#F0803C"><animateMotion dur="9s" repeatCount="indefinite" path="M0 0 h1392 v170 h-1392 v-170"/></circle>
+</svg>
+<div class="card" style="position:absolute; left:0; top:0; width:272px; height:150px; box-sizing:border-box; padding:20px 24px; gap:4px"><h3>1 · Sense</h3><p class="cap">Encoders, cameras, force sensors</p></div>
+<div class="card" style="position:absolute; left:348px; top:0; width:272px; height:150px; box-sizing:border-box; padding:20px 24px; gap:4px"><h3>2 · Estimate</h3><p class="cap">Where am I? Where are the objects?</p></div>
+<div class="card" style="position:absolute; left:696px; top:0; width:272px; height:150px; box-sizing:border-box; padding:20px 24px; gap:4px"><h3>3 · Plan</h3><p class="cap">Choose a safe path to the goal</p></div>
+<div class="card" style="position:absolute; left:1044px; top:0; width:272px; height:150px; box-sizing:border-box; padding:20px 24px; gap:4px"><h3>4 · Control</h3><p class="cap">Turn the plan into motor commands</p></div>
+<div class="card" style="position:absolute; left:1392px; top:0; width:272px; height:150px; box-sizing:border-box; padding:20px 24px; gap:4px"><h3>5 · Act</h3><p class="cap">Motors apply torque to the joints</p></div>
+<p style="position:absolute; left:632px; top:205px; width:400px; height:80px; box-sizing:border-box; background:#16242E; color:#F6F4EE; border-radius:12px; font-size:24px; font-weight:600; line-height:80px; text-align:center">Physical world</p>
+<x-connector x1="272" y1="75" x2="348" y2="75" style="color:#44535D; border-width:3px"></x-connector>
+<x-connector x1="620" y1="75" x2="696" y2="75" style="color:#44535D; border-width:3px"></x-connector>
+<x-connector x1="968" y1="75" x2="1044" y2="75" style="color:#44535D; border-width:3px"></x-connector>
+<x-connector x1="1316" y1="75" x2="1392" y2="75" style="color:#44535D; border-width:3px"></x-connector>
+<x-connector x1="1528" y1="150" x2="1528" y2="245" head="none" style="color:#44535D; border-width:3px"></x-connector>
+<x-connector x1="1528" y1="245" x2="1032" y2="245" style="color:#44535D; border-width:3px"></x-connector>
+<x-connector x1="632" y1="245" x2="136" y2="245" head="none" style="color:#44535D; border-width:3px"></x-connector>
+<x-connector x1="136" y1="245" x2="136" y2="150" style="color:#44535D; border-width:3px"></x-connector>
+</div>
+<div class="row">
+<div class="col grow" style="gap:10px"><h3 class="blue">Why it must be a loop</h3><p class="cap">Models are never exact: friction, payloads and bumped objects all differ from the plan. Measuring the result and correcting is what makes motion reliable.</p></div>
+<div class="col grow" style="gap:10px"><h3 class="blue">Where this course sits</h3><p class="cap">Parts 2 and 3 cover boxes 3 and 4 with explicit models and algorithms. That is the classical approach, and it is still what runs most industrial arms.</p></div>
+<div class="col grow" style="gap:10px"><h3 class="orange">What learning changes</h3><p class="cap">Part 4 replaces one or several boxes with a neural network trained on data. An end-to-end policy maps camera images straight to motor commands.</p></div>
+</div>
+<p class="foot">Part 1 · Background</p>
+</section>
+<!-- 4 · anatomy -->
+<section id="anatomy" data-transition="fade">
+<div class="head"><p class="eyebrow">Concept</p><h2>Anatomy of a robot arm</h2></div>
+<div class="row" style="gap:64px">
+<div style="position:relative; width:760px; height:600px">
+<svg aria-label="Side view of a robot arm: a fixed base, a shoulder joint, an upper link, an elbow joint, a forearm link and a gripper" style="position:absolute; left:0; top:0" width="760" height="600" viewBox="0 0 760 600">
+<path d="M90 580 L330 580" stroke="#16242E" stroke-width="8" stroke-linecap="round"/>
+<path d="M210 580 L210 470" stroke="#8C99A1" stroke-width="44" stroke-linecap="butt"/>
+<path d="M210 450 L390 230" stroke="#2F7BEA" stroke-width="34" stroke-linecap="round"/>
+<path d="M390 230 L590 320" stroke="#5B9DFF" stroke-width="28" stroke-linecap="round"/>
+<path d="M590 320 L630 338 M630 338 L640 306 L690 328 M630 338 L616 368 L666 392" fill="none" stroke="#16242E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="210" cy="450" r="26" fill="#F6F4EE" stroke="#16242E" stroke-width="7"/>
+<circle cx="390" cy="230" r="22" fill="#F6F4EE" stroke="#16242E" stroke-width="7"/>
+<circle cx="590" cy="320" r="16" fill="#F6F4EE" stroke="#16242E" stroke-width="6"/>
+<path d="M270 450 A60 60 0 0 0 248 404" fill="none" stroke="#B8481A" stroke-width="4"/>
+<path d="M444 254 A60 60 0 0 0 352 184" fill="none" stroke="#B8481A" stroke-width="4"/>
+<path d="M210 450 L300 450" stroke="#B8481A" stroke-width="3" stroke-dasharray="6 8"/>
+<g stroke="#44535D" stroke-width="2">
+<path d="M176 432 L120 380"/>
+<path d="M296 336 L226 268"/>
+<path d="M392 204 L392 130"/>
+<path d="M660 400 L660 452"/>
+</g>
+</svg>
+<p class="cap" style="position:absolute; left:0; top:310px; width:200px"><b>Joint 1</b> (shoulder), revolute</p>
+<p class="cap" style="position:absolute; left:100px; top:200px; width:220px"><b>Link</b>: a rigid body</p>
+<p class="cap" style="position:absolute; left:300px; top:56px; width:330px"><b>Joint 2</b> (elbow): motor, gearbox and encoder inside</p>
+<p class="cap orange" style="position:absolute; left:290px; top:400px; width:120px"><b>q₁</b></p>
+<p class="cap orange" style="position:absolute; left:452px; top:176px; width:120px"><b>q₂</b></p>
+<p class="cap" style="position:absolute; left:540px; top:460px; width:220px"><b>End-effector</b> (gripper or tool)</p>
+<p class="cap" style="position:absolute; left:350px; top:544px; width:300px"><b>Base</b>, bolted to the world</p>
+</div>
+<div style="flex:1; display:grid; grid-template-columns:230px 1fr; column-gap:28px; row-gap:26px">
+<h3 class="blue">Link</h3><p class="cap">A rigid segment. Its shape matters for collision checking; its mass and inertia matter for dynamics.</p>
+<h3 class="blue">Joint</h3><p class="cap">Connects two links and allows one motion. Revolute joints rotate, prismatic joints slide. The joint variable is written q.</p>
+<h3 class="blue">Degrees of freedom</h3><p class="cap">The number of independent joint variables. Six are needed to place the hand at any position and orientation; a 7-joint arm has one spare, called redundancy.</p>
+<h3 class="blue">End-effector</h3><p class="cap">The gripper or tool at the tip. Tasks are usually stated for it: “put the hand here”.</p>
+<h3 class="blue">Actuators and sensors</h3><p class="cap">Each joint has an electric motor, a gearbox and an encoder that measures its angle. Many arms add joint torque sensors and wrist or scene cameras.</p>
+</div>
+</div>
+<p class="foot">Part 1 · Background</p>
+</section>
+<!-- 5 · history -->
+<section id="history" data-transition="fade">
+<div class="head"><p class="eyebrow">Background</p><h2>Sixty years in two eras</h2></div>
+<div class="row" style="gap:64px">
+<div class="col grow" style="gap:18px">
+<p class="tag">Model-based era: write down geometry and physics, then compute</p>
+<div class="row" style="gap:24px"><h3 class="blue" style="width:150px">1961</h3><p class="cap grow">Unimate, the first industrial robot arm, starts work on a General Motors line. It replays recorded joint motions.</p></div>
+<div class="row" style="gap:24px"><h3 class="blue" style="width:150px">1979–83</h3><p class="cap grow">Lozano-Pérez introduces configuration space: planning for a robot becomes planning for a point.</p></div>
+<div class="row" style="gap:24px"><h3 class="blue" style="width:150px">1986</h3><p class="cap grow">Khatib’s artificial potential fields give real-time obstacle avoidance.</p></div>
+<div class="row" style="gap:24px"><h3 class="blue" style="width:150px">1996–98</h3><p class="cap grow">Sampling-based planners, PRM (Kavraki et al.) and RRT (LaValle), make 6- and 7-joint planning practical.</p></div>
+<div class="row" style="gap:24px"><h3 class="blue" style="width:150px">2009–11</h3><p class="cap grow">CHOMP brings trajectory optimization to arms; RRT* (Karaman and Frazzoli) adds a proof of asymptotic optimality.</p></div>
+</div>
+<div class="col grow" style="gap:18px">
+<p class="tag warm">Data-driven era: collect experience, then fit a policy</p>
+<div class="row" style="gap:24px"><h3 class="orange" style="width:150px">2016</h3><p class="cap grow">Levine et al. train deep networks end to end, from camera pixels to motor torques.</p></div>
+<div class="row" style="gap:24px"><h3 class="orange" style="width:150px">2017–19</h3><p class="cap grow">Domain randomization lets policies trained only in simulation run on hardware, including OpenAI’s dexterous hand.</p></div>
+<div class="row" style="gap:24px"><h3 class="orange" style="width:150px">2022–23</h3><p class="cap grow">RT-1 and RT-2 scale imitation with transformers; Diffusion Policy and ACT make imitation robust for fine manipulation.</p></div>
+<div class="row" style="gap:24px"><h3 class="orange" style="width:150px">2023</h3><p class="cap grow">Open X-Embodiment pools over a million robot trajectories from 22 kinds of robot.</p></div>
+<div class="row" style="gap:24px"><h3 class="orange" style="width:150px">2024–25</h3><p class="cap grow">Open generalist vision-language-action models arrive: OpenVLA, π0, GR00T N1, SmolVLA.</p></div>
+</div>
+</div>
+<p class="cap" style="margin-top:auto">The eras overlap. Today’s systems mix both: learned perception and policies on top of model-based control and safety checks.</p>
+<p class="foot">Part 1 · Background</p>
+</section>
+<!-- 6 · stack -->
+<section id="stack" data-transition="fade">
+<div class="head"><p class="eyebrow">Concept</p><h2>The control stack runs at five speeds</h2></div>
+<div style="display:grid; grid-template-columns:330px 520px 1fr; column-gap:32px; row-gap:8px; align-items:center">
+<p class="label soft">Layer</p><p class="label soft">Question it answers</p><p class="label soft">Typical update rate (log scale)</p>
+<h3>Task planning</h3><p class="cap">What to do, in which order? “Pick the cup, then pour.”</p>
+<div class="row" style="gap:16px; align-items:center"><div style="width:20%; height:36px; background:#B8481A; border-radius:6px"></div><p class="label">≤ 1 Hz</p></div>
+<h3>Motion planning</h3><p class="cap">Which collision-free path gets there?</p>
+<div class="row" style="gap:16px; align-items:center"><div style="width:36%; height:36px; background:#1F5FBF; border-radius:6px"></div><p class="label">1–10 Hz</p></div>
+<h3>Trajectory generation</h3><p class="cap">When should each joint be where, within speed limits?</p>
+<div class="row" style="gap:16px; align-items:center"><div style="width:52%; height:36px; background:#1F5FBF; border-radius:6px"></div><p class="label">10–100 Hz</p></div>
+<h3>Joint control</h3><p class="cap">What torque makes the joint follow the trajectory?</p>
+<div class="row" style="gap:16px; align-items:center"><div style="width:68%; height:36px; background:#1F5FBF; border-radius:6px"></div><p class="label">about 1 kHz</p></div>
+<h3>Motor drive</h3><p class="cap">What current produces that torque?</p>
+<div class="row" style="gap:16px; align-items:center"><div style="width:84%; height:36px; background:#8C99A1; border-radius:6px"></div><p class="label">10 kHz +</p></div>
+</div>
+<div class="row" style="margin-top:auto">
+<div class="panel grow"><h3>Why layers</h3><p class="cap">Slow layers think far ahead with rough models. Fast layers react to disturbances with simple rules. Each layer hands a reference to the one below.</p></div>
+<div class="panel grow"><h3>Where this course works</h3><p class="cap">The blue rows. Electronics handles the grey row; task planning (orange) is its own field and is now often delegated to language models.</p></div>
+<div class="panel grow"><h3>Where learned policies plug in</h3><p class="cap">A visuomotor policy usually runs at 5–50 Hz and outputs joint or hand targets. The 1 kHz joint controller underneath stays classical.</p></div>
+</div>
+<p class="foot">Part 1 · Background</p>
+</section>
+<!-- 7 · config -->
+<section id="config" data-transition="fade">
+<div class="head"><p class="eyebrow">Theory</p><h2>Two ways to describe where the arm is</h2></div>
+<div class="row" style="gap:56px">
+<div class="col" style="width:720px; gap:22px">
+<div class="col" style="gap:6px"><h3 class="blue">Joint space: the configuration q</h3><p class="cap">One number per joint: q = (q₁, q₂, …, qₙ). It pins down the pose of every link. The motors act here, and so do joint limits.</p></div>
+<div class="col" style="gap:6px"><h3 class="orange">Task space: the hand pose x</h3><p class="cap">Where the end-effector is. In the plane: (x, y). In 3D: position plus orientation, six numbers, an element of the group SE(3). Tasks and obstacles live here.</p></div>
+<div class="panel" style="gap:8px">
+<p class="label">Two maps connect them</p>
+<p class="cap"><b>Forward kinematics (FK)</b>: q → x. Always one answer, cheap.</p>
+<p class="cap"><b>Inverse kinematics (IK)</b>: x → q. Zero, several or infinitely many answers.</p>
+</div>
+<p class="cap">Motion planning mostly happens in joint space, because a point there describes the whole robot, not only its hand.</p>
+</div>
+<div style="position:relative; width:888px; height:600px">
+<svg aria-label="Left: a two-link arm in the plane with joint angles q1 and q2 and hand position x, y. Right: the same pose shown as a single point in the q1, q2 square" style="position:absolute; left:0; top:0" width="888" height="600" viewBox="0 0 888 600">
+<rect x="0" y="70" width="400" height="400" rx="12" fill="#EBE7DC"/>
+<rect x="488" y="70" width="400" height="400" rx="12" fill="#EBE7DC"/>
+<path d="M40 430 L360 430" stroke="#8C99A1" stroke-width="3"/>
+<path d="M90 430 L190 430" stroke="#B8481A" stroke-width="3" stroke-dasharray="6 8"/>
+<path d="M212 284 L300 179" stroke="#B8481A" stroke-width="3" stroke-dasharray="6 8"/>
+<path d="M90 430 L212 284" stroke="#2F7BEA" stroke-width="22" stroke-linecap="round"/>
+<path d="M212 284 L353 335" stroke="#5B9DFF" stroke-width="18" stroke-linecap="round"/>
+<path d="M140 430 A50 50 0 0 0 122 392" fill="none" stroke="#B8481A" stroke-width="4"/>
+<path d="M244 246 A50 50 0 0 1 259 301" fill="none" stroke="#B8481A" stroke-width="4"/>
+<circle cx="90" cy="430" r="15" fill="#F6F4EE" stroke="#16242E" stroke-width="6"/>
+<circle cx="212" cy="284" r="13" fill="#F6F4EE" stroke="#16242E" stroke-width="6"/>
+<circle cx="353" cy="335" r="11" fill="#B8481A"/>
+<path d="M353 335 L353 430" stroke="#44535D" stroke-width="2" stroke-dasharray="4 6"/>
+<path d="M488 270 L888 270 M688 70 L688 470" stroke="#C9C2B0" stroke-width="2"/>
+<path d="M744 270 L744 348 M688 348 L744 348" stroke="#44535D" stroke-width="2" stroke-dasharray="4 6"/>
+<circle cx="744" cy="348" r="12" fill="#1F5FBF"/>
+<path d="M412 240 L470 240" stroke="#16242E" stroke-width="3"/><path d="M476 240 L462 232 L462 248 Z" fill="#16242E"/>
+<path d="M476 300 L418 300" stroke="#16242E" stroke-width="3"/><path d="M412 300 L426 292 L426 308 Z" fill="#16242E"/>
+</svg>
+<p class="label orange" style="position:absolute; left:0; top:24px; width:400px">Task space (the workspace)</p>
+<p class="label blue" style="position:absolute; left:488px; top:24px; width:400px">Joint space</p>
+<p class="cap orange" style="position:absolute; left:150px; top:386px; width:60px"><b>q₁</b></p>
+<p class="cap orange" style="position:absolute; left:272px; top:254px; width:60px"><b>q₂</b></p>
+<p class="cap" style="position:absolute; left:110px; top:318px; width:50px">l₁</p>
+<p class="cap" style="position:absolute; left:262px; top:318px; width:50px">l₂</p>
+<p class="cap" style="position:absolute; left:296px; top:354px; width:104px"><b>(x, y)</b></p>
+<p class="cap" style="position:absolute; left:768px; top:334px; width:120px"><b>(q₁, q₂)</b></p>
+<p class="cap" style="position:absolute; left:842px; top:234px; width:46px">q₁</p>
+<p class="cap" style="position:absolute; left:698px; top:76px; width:46px">q₂</p>
+<p class="cap" style="position:absolute; left:412px; top:196px; width:64px; text-align:center">IK</p>
+<p class="cap" style="position:absolute; left:412px; top:312px; width:64px; text-align:center">FK</p>
+<p class="cap" style="position:absolute; left:0; top:490px; width:400px">The arm as you see it: links, hand, obstacles.</p>
+<p class="cap" style="position:absolute; left:488px; top:490px; width:400px">The same pose as one point. Each axis is a joint angle from −180° to 180°.</p>
+</div>
+</div>
+<p class="foot">Part 2 · Motion and control</p>
+</section>
+<!-- 8 · fk -->
+<section id="fk" class="dark" data-transition="fade">
+<div class="head"><p class="eyebrow">Theory · live demo</p><h2>Forward kinematics: angles to hand position</h2></div>
+<div class="left">
+<p class="soft">Given the joint angles, where is the hand? For the two-link arm it is plain trigonometry: add the two link vectors.</p>
+<div class="panel" style="gap:4px">
+<p class="eq">x = l₁ cos q₁ + l₂ cos(q₁ + q₂)</p>
+<p class="eq">y = l₁ sin q₁ + l₂ sin(q₁ + q₂)</p>
+</div>
+<p class="soft">A real arm chains one 4×4 homogeneous transform per joint. Each holds a rotation and a translation:</p>
+<div class="panel"><p class="eq">T(q) = T₁(q₁) · T₂(q₂) ⋯ Tₙ(qₙ)</p></div>
+<p class="cap">FK always exists, is unique, and costs microseconds. Collision checkers call it constantly to place every link in space.</p>
+</div>
+<x-embed style="position:absolute; left:880px; top:282px; width:912px; height:638px"><template><style>html,body{margin:0;height:100%;overflow:hidden}canvas{display:block}</style><canvas id="c"></canvas><script>
+const W=912,H=638,c=document.getElementById('c'),g=c.getContext('2d'),F='px system-ui,-apple-system,Segoe UI,sans-serif';
+function fit(){const s=Math.min(innerWidth/W,innerHeight/H)||1;c.width=Math.max(2,innerWidth*2);c.height=Math.max(2,innerHeight*2);c.style.width=innerWidth+'px';c.style.height=innerHeight+'px';g.setTransform(2*s,0,0,2*s,0,0)}
+fit();addEventListener('resize',fit);
+function bg(){g.clearRect(0,0,W,H);g.fillStyle='#0B171F';g.beginPath();if(g.roundRect)g.roundRect(0,0,W,H,14);else g.rect(0,0,W,H);g.fill()}
+function txt(s,x,y,col,sz,al){g.fillStyle=col||'#E9EEF0';g.font=(sz||24)+F;g.textAlign=al||'left';g.fillText(s,x,y)}
+function line(x1,y1,x2,y2,col,w){g.strokeStyle=col;g.lineWidth=w||2;g.lineCap='round';g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke()}
+function dot(x,y,r,fill,stroke,w){g.beginPath();g.arc(x,y,r,0,6.2832);if(fill){g.fillStyle=fill;g.fill()}if(stroke){g.strokeStyle=stroke;g.lineWidth=w||4;g.stroke()}}
+const bx=250,by=455,L1=190,L2=142,S=475;let t=0,tr=[];
+const deg=a=>Math.round(a*57.2958);
+function frame(){t+=1/60;
+const q1=1.05+0.7*Math.sin(t*0.5),q2=-1.2+0.95*Math.sin(t*0.83+1);
+const ex=bx+L1*Math.cos(q1),ey=by-L1*Math.sin(q1),tx=ex+L2*Math.cos(q1+q2),ty=ey-L2*Math.sin(q1+q2);
+tr.push([tx,ty]);if(tr.length>520)tr.shift();
+bg();line(bx-60,by+20,bx+60,by+20,'#36505F',6);
+g.strokeStyle='rgba(255,154,92,.5)';g.lineWidth=3;g.beginPath();tr.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.stroke();
+g.setLineDash([5,8]);line(bx,by,bx+84,by,'#A9BAC2',2);line(ex,ey,ex+74*Math.cos(q1),ey-74*Math.sin(q1),'#A9BAC2',2);g.setLineDash([]);
+g.strokeStyle='#FF9A5C';g.lineWidth=3;g.beginPath();g.arc(bx,by,48,0,-q1,q1>0);g.stroke();g.beginPath();g.arc(ex,ey,42,-q1,-(q1+q2),q2>0);g.stroke();
+line(bx,by,ex,ey,'#2F7BEA',20);line(ex,ey,tx,ty,'#5B9DFF',16);
+dot(bx,by,13,'#0B171F','#E9EEF0');dot(ex,ey,11,'#0B171F','#E9EEF0');dot(tx,ty,10,'#FF9A5C');
+line(tx,ty,tx,by,'#36505F',2);
+txt('Input: joint space',610,80,'#A9BAC2');txt('q₁ = '+deg(q1)+'°',610,128,'#E9EEF0',32);txt('q₂ = '+deg(q2)+'°',610,172,'#E9EEF0',32);
+txt('Output: task space',610,262,'#A9BAC2');txt('x = '+((tx-bx)/S).toFixed(2)+' m',610,310,'#FF9A5C',32);txt('y = '+((by-ty)/S).toFixed(2)+' m',610,354,'#FF9A5C',32);
+txt('l₁ = 0.40 m, l₂ = 0.30 m',610,440,'#A9BAC2');txt('Orange trace: path of the hand',40,600,'#A9BAC2');
+requestAnimationFrame(frame)}
+frame();
+</script></template></x-embed>
+<p class="foot">Part 2 · Motion and control</p>
+</section>
+<!-- 9 · ik -->
+<section id="ik" class="dark" data-transition="fade">
+<div class="head"><p class="eyebrow">Theory · live demo</p><h2>Inverse kinematics: hand position to angles</h2></div>
+<div class="left">
+<p class="soft">Tasks are given for the hand, but motors need joint angles. The inverse is harder: the answer is not unique.</p>
+<div class="row" style="gap:20px">
+<div class="card grow" style="padding:20px 24px"><p class="big" style="font-size:64px">0</p><p class="cap">Target out of reach</p></div>
+<div class="card grow" style="padding:20px 24px"><p class="big" style="font-size:64px">2</p><p class="cap">This arm: elbow either side</p></div>
+<div class="card grow" style="padding:20px 24px"><p class="big" style="font-size:64px">∞</p><p class="cap">7-joint arm: a spare joint</p></div>
+</div>
+<p class="soft">Simple arms have a closed form. Here the law of cosines gives the elbow, and the shoulder follows:</p>
+<div class="panel"><p class="eqs">cos q₂ = (x² + y² − l₁² − l₂²) / (2 l₁ l₂)</p></div>
+<p class="cap">General arms use numerical IK: iterate from a guess with the Jacobian (next slide). A 6-joint arm can have up to 16 solutions.</p>
+</div>
+<x-embed style="position:absolute; left:880px; top:282px; width:912px; height:638px"><template><style>html,body{margin:0;height:100%;overflow:hidden}canvas{display:block}</style><canvas id="c"></canvas><script>
+const W=912,H=638,c=document.getElementById('c'),g=c.getContext('2d'),F='px system-ui,-apple-system,Segoe UI,sans-serif';
+function fit(){const s=Math.min(innerWidth/W,innerHeight/H)||1;c.width=Math.max(2,innerWidth*2);c.height=Math.max(2,innerHeight*2);c.style.width=innerWidth+'px';c.style.height=innerHeight+'px';g.setTransform(2*s,0,0,2*s,0,0)}
+fit();addEventListener('resize',fit);
+function bg(){g.clearRect(0,0,W,H);g.fillStyle='#0B171F';g.beginPath();if(g.roundRect)g.roundRect(0,0,W,H,14);else g.rect(0,0,W,H);g.fill()}
+function txt(s,x,y,col,sz,al){g.fillStyle=col||'#E9EEF0';g.font=(sz||24)+F;g.textAlign=al||'left';g.fillText(s,x,y)}
+function line(x1,y1,x2,y2,col,w){g.strokeStyle=col;g.lineWidth=w||2;g.lineCap='round';g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke()}
+function dot(x,y,r,fill,stroke,w){g.beginPath();g.arc(x,y,r,0,6.2832);if(fill){g.fillStyle=fill;g.fill()}if(stroke){g.strokeStyle=stroke;g.lineWidth=w||4;g.stroke()}}
+const bx=290,by=470,L1=190,L2=142,S=475;let t=0;
+function P(s){return[bx+50+245*Math.cos(s*0.45),by-205-150*Math.sin(s*0.9)]}
+function arm(q1,q2,c1,c2,a){g.globalAlpha=a;const ex=bx+L1*Math.cos(q1),ey=by-L1*Math.sin(q1);line(bx,by,ex,ey,c1,20);line(ex,ey,ex+L2*Math.cos(q1+q2),ey-L2*Math.sin(q1+q2),c2,16);dot(ex,ey,11,'#0B171F','#E9EEF0');g.globalAlpha=1}
+function frame(){t+=1/60;const p=P(t),dx=p[0]-bx,dy=by-p[1],c2=(dx*dx+dy*dy-L1*L1-L2*L2)/(2*L1*L2);
+bg();g.setLineDash([6,10]);g.strokeStyle='#36505F';g.lineWidth=2;g.beginPath();g.arc(bx,by,L1+L2,0,6.2832);g.stroke();g.setLineDash([]);
+g.strokeStyle='#1E3442';g.lineWidth=3;g.beginPath();for(let i=0;i<=160;i++){const q=P(i/160*13.963);i?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1])}g.stroke();
+let ok=Math.abs(c2)<=1;
+if(ok){const a=Math.acos(c2);for(const q2 of[a,-a]){const q1=Math.atan2(dy,dx)-Math.atan2(L2*Math.sin(q2),L1+L2*Math.cos(q2));if(q2>0)arm(q1,q2,'#B5622F','#FF9A5C',.6);else arm(q1,q2,'#2F7BEA','#5B9DFF',1)}}
+else arm(Math.atan2(dy,dx),0,'#5B6B75','#7C8B94',1);
+dot(bx,by,13,'#0B171F','#E9EEF0');dot(p[0],p[1],12,null,'#E9EEF0',3);dot(p[0],p[1],4,'#E9EEF0');
+txt('Target',660,80,'#A9BAC2');txt('x = '+(dx/S).toFixed(2)+' m',660,126,'#E9EEF0',32);txt('y = '+(dy/S).toFixed(2)+' m',660,170,'#E9EEF0',32);
+txt('Solutions',660,262,'#A9BAC2');
+if(ok){dot(672,300,9,'#5B9DFF');txt('q₂ < 0',694,309);dot(672,344,9,'#FF9A5C');txt('q₂ > 0',694,353)}
+else{txt('none:',660,309,'#FF9A5C',32);txt('out of reach',660,351,'#FF9A5C',32)}
+txt('Dashed circle: reach l₁ + l₂',40,612,'#A9BAC2');
+requestAnimationFrame(frame)}
+frame();
+</script></template></x-embed>
+<p class="foot">Part 2 · Motion and control</p>
+</section>
+<!-- 10 · jacobian -->
+<section id="jacobian" class="dark" data-transition="fade">
+<div class="head"><p class="eyebrow">Theory · live demo</p><h2>The Jacobian: joint speed to hand speed</h2></div>
+<div class="left" style="gap:20px">
+<div class="panel" style="gap:4px"><p class="eq">ẋ = J(q) q̇ ,   J = ∂x / ∂q</p><p class="cap">Column i of J is the hand velocity when only joint i turns at unit speed.</p></div>
+<div class="col" style="gap:4px"><h3 class="blue">Numerical IK</h3><p class="cap">Step toward the target with Δq = J⁺ Δx and repeat. J⁺ is the pseudo-inverse; a damped version stays stable near singularities.</p></div>
+<div class="col" style="gap:4px"><h3 class="blue">Forces</h3><p class="cap">The transpose maps a force F at the hand to joint torques: τ = Jᵀ F. No inverse needed.</p></div>
+<div class="col" style="gap:4px"><h3 class="orange">Singularities</h3><p class="cap">Where J loses rank, the hand cannot move in some direction and J⁺ blows up. For this arm det J = l₁ l₂ sin q₂, which is zero when the arm is straight or folded.</p></div>
+</div>
+<x-embed style="position:absolute; left:880px; top:282px; width:912px; height:638px"><template><style>html,body{margin:0;height:100%;overflow:hidden}canvas{display:block}</style><canvas id="c"></canvas><script>
+const W=912,H=638,c=document.getElementById('c'),g=c.getContext('2d'),F='px system-ui,-apple-system,Segoe UI,sans-serif';
+function fit(){const s=Math.min(innerWidth/W,innerHeight/H)||1;c.width=Math.max(2,innerWidth*2);c.height=Math.max(2,innerHeight*2);c.style.width=innerWidth+'px';c.style.height=innerHeight+'px';g.setTransform(2*s,0,0,2*s,0,0)}
+fit();addEventListener('resize',fit);
+function bg(){g.clearRect(0,0,W,H);g.fillStyle='#0B171F';g.beginPath();if(g.roundRect)g.roundRect(0,0,W,H,14);else g.rect(0,0,W,H);g.fill()}
+function txt(s,x,y,col,sz,al){g.fillStyle=col||'#E9EEF0';g.font=(sz||24)+F;g.textAlign=al||'left';g.fillText(s,x,y)}
+function line(x1,y1,x2,y2,col,w){g.strokeStyle=col;g.lineWidth=w||2;g.lineCap='round';g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke()}
+function dot(x,y,r,fill,stroke,w){g.beginPath();g.arc(x,y,r,0,6.2832);if(fill){g.fillStyle=fill;g.fill()}if(stroke){g.strokeStyle=stroke;g.lineWidth=w||4;g.stroke()}}
+const bx=230,by=520,L1=190,L2=142,S=475,k=0.3;let t=0;
+function frame(){t+=1/60;const q1=1.15+0.15*Math.sin(t*0.31),q2=-1.28+1.28*Math.sin(t*0.42);
+const s1=Math.sin(q1),c1=Math.cos(q1),s12=Math.sin(q1+q2),c12=Math.cos(q1+q2);
+const ex=bx+L1*c1,ey=by-L1*s1,tx=ex+L2*c12,ty=ey-L2*s12;
+const a=-L1*s1-L2*s12,b=-L2*s12,d=L1*c1+L2*c12,e=L2*c12;
+bg();line(bx-60,by+20,bx+60,by+20,'#36505F',6);
+g.beginPath();for(let i=0;i<=72;i++){const u=i/72*6.2832,X=tx+k*(a*Math.cos(u)+b*Math.sin(u)),Y=ty-k*(d*Math.cos(u)+e*Math.sin(u));i?g.lineTo(X,Y):g.moveTo(X,Y)}
+g.closePath();g.fillStyle='rgba(255,154,92,.2)';g.fill();g.strokeStyle='#FF9A5C';g.lineWidth=3;g.stroke();
+line(tx,ty,tx+k*a,ty-k*d,'#E9EEF0',3);line(tx,ty,tx+k*b,ty-k*e,'#A9BAC2',3);
+line(bx,by,ex,ey,'#2F7BEA',20);line(ex,ey,tx,ty,'#5B9DFF',16);
+dot(bx,by,13,'#0B171F','#E9EEF0');dot(ex,ey,11,'#0B171F','#E9EEF0');dot(tx,ty,8,'#FF9A5C');
+const det=(L1/S)*(L2/S)*Math.sin(q2),sing=Math.abs(Math.sin(q2))<0.14;
+txt('Elbow angle',600,80,'#A9BAC2');txt('q₂ = '+Math.round(q2*57.2958)+'°',600,128,'#E9EEF0',32);
+txt('det J = l₁ l₂ sin q₂',600,222,'#A9BAC2');txt((det<0?'−':'')+Math.abs(det).toFixed(3),600,270,sing?'#FF9A5C':'#E9EEF0',32);
+if(sing){txt('Near singular:',600,360,'#FF9A5C');txt('the ellipse is almost a line',600,394,'#FF9A5C')}
+txt('Orange ellipse: hand velocities',40,50,'#FF9A5C');txt('reachable at unit joint speed',40,84,'#FF9A5C');txt('White: column 1 (joint 1 moving)',40,572,'#E9EEF0');txt('Grey: column 2 (joint 2 moving)',40,606,'#A9BAC2');
+requestAnimationFrame(frame)}
+frame();
+</script></template></x-embed>
+<p class="foot">Part 2 · Motion and control</p>
+</section>
+<!-- 11 · dynamics -->
+<section id="dynamics" data-transition="fade" style="gap:32px">
+<div class="head"><p class="eyebrow">Theory</p><h2>Dynamics: torques to motion</h2></div>
+<p class="soft" style="width:1300px">Kinematics ignores mass. Dynamics is Newton’s F = ma for a chain of linked bodies, written in joint coordinates. It is called the manipulator equation:</p>
+<div class="panel" style="align-items:center; padding:24px"><p class="eq" style="font-size:64px; line-height:1.2"><span style="color:#1F5FBF">M(q) q̈</span>  +  <span style="color:#B8481A">C(q, q̇) q̇</span>  +  <span style="color:#44535D">g(q)</span>  =  τ</p></div>
+<div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:24px">
+<div class="col" style="gap:6px"><h3 class="blue">Inertia</h3><p class="cap">M is the mass matrix. It changes with pose: a stretched arm is harder to swing than a folded one.</p></div>
+<div class="col" style="gap:6px"><h3 class="orange">Coriolis, centrifugal</h3><p class="cap">Velocity coupling. Swinging the shoulder fast throws the elbow outward.</p></div>
+<div class="col" style="gap:6px"><h3 class="soft">Gravity</h3><p class="cap">The torque needed just to hold still. Zero in orbit; dominant for a slow, heavy arm.</p></div>
+<div class="col" style="gap:6px"><h3>Motor torque τ</h3><p class="cap">What you control. A real robot adds friction and contact forces Jᵀ F on this side.</p></div>
+</div>
+<div class="row" style="margin-top:auto">
+<div class="card grow"><p class="tag">Forward dynamics</p><p class="cap">Given torques τ, solve for the acceleration q̈, then integrate. This is what a simulator does every time step (Part 5).</p></div>
+<div class="card grow"><p class="tag warm">Inverse dynamics</p><p class="cap">Given a desired acceleration q̈, compute the torques τ. This is what a model-based controller does to follow a trajectory.</p></div>
+</div>
+<p class="foot">Part 2 · Motion and control</p>
+</section>
+<!-- 12 · feedback -->
+<section id="feedback" data-transition="fade">
+<div class="head"><p class="eyebrow">Theory</p><h2>Feedback control: measure, compare, correct</h2></div>
+<!-- Sum 190,60,60,60  Controller 360,40,320,100  Joint 860,40,320,100 ; tap point 1300,90 ; return strip y=185 -->
+<div style="position:relative; width:1664px; height:200px">
+<x-shape kind="ellipse" style="position:absolute; left:190px; top:60px; width:60px; height:60px; background:#FDFCF8; border:3px solid #16242E; box-sizing:border-box"></x-shape>
+<div class="card" style="position:absolute; left:360px; top:40px; width:320px; height:100px; box-sizing:border-box; padding:14px 24px; gap:0; justify-content:center"><h3>Controller</h3><p class="cap">PID law, 1 kHz</p></div>
+<div class="card" style="position:absolute; left:860px; top:40px; width:320px; height:100px; box-sizing:border-box; padding:14px 24px; gap:0; justify-content:center"><h3>Motor and joint</h3><p class="cap">the physical system</p></div>
+<p class="cap" style="position:absolute; left:0; top:52px; width:150px"><b>target q*</b></p>
+<p class="cap" style="position:absolute; left:262px; top:46px; width:90px"><b>error e</b></p>
+<p class="cap" style="position:absolute; left:700px; top:46px; width:140px"><b>torque τ</b></p>
+<p class="cap" style="position:absolute; left:1330px; top:46px; width:300px"><b>measured angle q</b></p>
+<p class="cap" style="position:absolute; left:560px; top:144px; width:560px">encoder reading fed back and subtracted</p>
+<p class="cap" style="position:absolute; left:1040px; top:0; width:520px">disturbances: gravity, friction, contact</p>
+<x-connector x1="20" y1="90" x2="190" y2="90" style="color:#16242E; border-width:3px"></x-connector>
+<x-connector x1="250" y1="90" x2="360" y2="90" style="color:#16242E; border-width:3px"></x-connector>
+<x-connector x1="680" y1="90" x2="860" y2="90" style="color:#16242E; border-width:3px"></x-connector>
+<x-connector x1="1180" y1="90" x2="1640" y2="90" style="color:#16242E; border-width:3px"></x-connector>
+<x-connector x1="1020" y1="8" x2="1020" y2="40" style="color:#B8481A; border-width:3px"></x-connector>
+<x-connector x1="1300" y1="90" x2="1300" y2="185" head="none" style="color:#1F5FBF; border-width:3px"></x-connector>
+<x-connector x1="1300" y1="185" x2="220" y2="185" head="none" style="color:#1F5FBF; border-width:3px"></x-connector>
+<x-connector x1="220" y1="185" x2="220" y2="120" style="color:#1F5FBF; border-width:3px"></x-connector>
+</div>
+<div class="panel" style="align-items:center"><p class="eq">τ  =  <span style="color:#1F5FBF">Kp e</span>  +  <span style="color:#B8481A">Ki ∫ e dt</span>  +  <span style="color:#44535D">Kd ė</span> ,   e = q* − q</p></div>
+<div class="row">
+<div class="col grow" style="gap:6px"><h3 class="blue">P: proportional</h3><p class="cap">A spring pulling toward the target. Stiffer means faster, but too stiff overshoots and oscillates.</p></div>
+<div class="col grow" style="gap:6px"><h3 class="orange">I: integral</h3><p class="cap">Accumulates leftover error and pushes until it is gone. Removes the sag that gravity causes.</p></div>
+<div class="col grow" style="gap:6px"><h3 class="soft">D: derivative</h3><p class="cap">A damper resisting fast change of the error. Kills overshoot; amplifies sensor noise if set too high.</p></div>
+</div>
+<p class="foot">Part 2 · Motion and control</p>
+</section>
+<!-- 13 · pid -->
+<section id="pid" class="dark" data-transition="fade">
+<div class="head"><p class="eyebrow">Live demo</p><h2>PID on one joint, three tunings</h2></div>
+<div class="left">
+<p class="soft">A single joint lifts a link against gravity to a target of 57° (1 rad). The simulation integrates the joint’s equation of motion with each controller in turn.</p>
+<div class="col" style="gap:6px"><h3 style="color:#A9BAC2">P only</h3><p class="cap">Rings for seconds, then settles below the target: the spring must stay stretched to hold the weight.</p></div>
+<div class="col" style="gap:6px"><h3 class="blue">P + D</h3><p class="cap">The damper removes the ringing. The steady-state sag remains.</p></div>
+<div class="col" style="gap:6px"><h3 class="orange">P + I + D</h3><p class="cap">The integral term winds up until the sag is cancelled. The joint reaches the target and stays.</p></div>
+<p class="cap">In practice arms add a gravity feed-forward term g(q), so the integral has little left to do.</p>
+</div>
+<x-embed style="position:absolute; left:880px; top:282px; width:912px; height:638px"><template><style>html,body{margin:0;height:100%;overflow:hidden}canvas{display:block}</style><canvas id="c"></canvas><script>
+const W=912,H=638,c=document.getElementById('c'),g=c.getContext('2d'),F='px system-ui,-apple-system,Segoe UI,sans-serif';
+function fit(){const s=Math.min(innerWidth/W,innerHeight/H)||1;c.width=Math.max(2,innerWidth*2);c.height=Math.max(2,innerHeight*2);c.style.width=innerWidth+'px';c.style.height=innerHeight+'px';g.setTransform(2*s,0,0,2*s,0,0)}
+fit();addEventListener('resize',fit);
+function bg(){g.clearRect(0,0,W,H);g.fillStyle='#0B171F';g.beginPath();if(g.roundRect)g.roundRect(0,0,W,H,14);else g.rect(0,0,W,H);g.fill()}
+function txt(s,x,y,col,sz,al){g.fillStyle=col||'#E9EEF0';g.font=(sz||24)+F;g.textAlign=al||'left';g.fillText(s,x,y)}
+function line(x1,y1,x2,y2,col,w){g.strokeStyle=col;g.lineWidth=w||2;g.lineCap='round';g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke()}
+function dot(x,y,r,fill,stroke,w){g.beginPath();g.arc(x,y,r,0,6.2832);if(fill){g.fillStyle=fill;g.fill()}if(stroke){g.strokeStyle=stroke;g.lineWidth=w||4;g.stroke()}}
+const DT=1/240,N=960,runs=[{n:'P only',k:[30,0,0],c:'#A9BAC2'},{n:'P + D',k:[30,0,9],c:'#5B9DFF'},{n:'P + I + D',k:[30,45,9],c:'#FF9A5C'}];
+for(const r of runs){let th=0,w=0,I=0;r.y=[];for(let i=0;i<N;i++){const e=1-th;I+=e*DT;const tau=r.k[0]*e+r.k[1]*I-r.k[2]*w;const acc=tau-1.0*w-8*Math.cos(th);w+=acc*DT;th+=w*DT;r.y.push(th)}}
+const X0=90,X1=620,Y0=520,Y1=96,px=i=>X0+(X1-X0)*i/N,py=v=>Y0-(Y0-Y1)*v/1.5;
+let T=0;const SEG=3.4,HOLD=3;
+function frame(){T+=1/60;if(T>SEG*3+HOLD)T=0;const ph=Math.min(2,Math.floor(T/SEG)),fr=Math.min(1,(T-ph*SEG)/(SEG-0.4)),cur=Math.min(N-1,Math.floor(fr*N));
+bg();line(X0,Y0,X1,Y0,'#36505F',2);line(X0,Y0,X0,Y1-20,'#36505F',2);
+for(let s=1;s<=4;s++){line(px(s*240),Y0,px(s*240),Y0+8,'#36505F',2);txt(s+' s',px(s*240),Y0+38,'#A9BAC2',24,'center')}
+g.setLineDash([8,8]);line(X0,py(1),X1,py(1),'#E9EEF0',2);g.setLineDash([]);txt('target',X1-4,py(1)-12,'#E9EEF0',24,'right');
+txt('joint angle (rad)',X0-50,58,'#A9BAC2');txt('1',X0-14,py(1)+8,'#A9BAC2',24,'right');txt('0',X0-14,Y0+8,'#A9BAC2',24,'right');
+runs.forEach((r,j)=>{if(j>ph)return;const n=j<ph?N-1:cur;g.strokeStyle=r.c;g.lineWidth=j==ph?4:3;g.globalAlpha=j==ph?1:.55;g.beginPath();for(let i=0;i<=n;i+=4)i?g.lineTo(px(i),py(r.y[i])):g.moveTo(px(i),py(r.y[i]));g.stroke();g.globalAlpha=1});
+runs.forEach((r,j)=>{const y=110+j*78,on=j<=ph;line(670,y-8,710,y-8,on?r.c:'#36505F',5);txt(r.n,724,y,on?'#E9EEF0':'#5B6B75');txt('Kp '+r.k[0]+'  Ki '+r.k[1]+'  Kd '+r.k[2],670,y+32,on?'#A9BAC2':'#36505F')});
+const r=runs[ph],th=r.y[cur],ax=730,ay=540,L=130;
+g.setLineDash([6,8]);line(ax,ay,ax+L*Math.cos(1),ay-L*Math.sin(1),'#E9EEF0',2);g.setLineDash([]);
+line(ax,ay,ax+L*Math.cos(th),ay-L*Math.sin(th),r.c,16);dot(ax,ay,12,'#0B171F','#E9EEF0');
+txt('error '+(1-th>=0?'':'−')+Math.abs(1-th).toFixed(2)+' rad',670,400,'#E9EEF0');
+requestAnimationFrame(frame)}
+frame();
+</script></template></x-embed>
+<p class="foot">Part 2 · Motion and control</p>
+</section>
+<!-- 14 · modes -->
+<section id="modes" data-transition="fade">
+<div class="head"><p class="eyebrow">Theory</p><h2>Four ways to command an arm</h2></div>
+<table>
+<tr class="th"><th style="width:17%">Mode</th><th style="width:21%">You send</th><th style="width:31%">The arm behaves like</th><th>Typical use</th></tr>
+<tr><td>Position control</td><td>Target joint angles q*</td><td>A stiff servo. Rejects disturbances, but pushes hard on anything in the way.</td><td>Free-space motion, pick and place, most planners’ output</td></tr>
+<tr><td>Velocity control</td><td>Target joint or hand velocity</td><td>A conveyor: moves at the commanded rate until told otherwise.</td><td>Teleoperation, visual servoing, mobile bases</td></tr>
+<tr><td>Torque control</td><td>Joint torques τ</td><td>Whatever you compute. You own the dynamics, so you need a model and a fast loop.</td><td>Research arms, legged robots, RL policies in simulation</td></tr>
+<tr><td>Impedance control</td><td>Target pose plus stiffness and damping</td><td>A programmable spring and damper around the target. Gives way on contact.</td><td>Assembly, wiping, working near people</td></tr>
+</table>
+<div class="row" style="margin-top:auto">
+<div class="panel" style="flex:3"><p class="label blue">Computed-torque control: cancel the dynamics, then run PD on what is left</p><p class="eqs">τ = M(q) (q̈* + Kd ė + Kp e) + C(q, q̇) q̇ + g(q)</p></div>
+<div class="panel" style="flex:2"><p class="label orange">Where learned policies fit</p><p class="cap">Most output position or hand-pose targets at 10–50 Hz and rely on one of these controllers underneath.</p></div>
+</div>
+<p class="foot">Part 2 · Motion and control</p>
+</section>
+<!-- 15 · problem -->
+<section id="problem" data-transition="fade">
+<div class="head"><p class="eyebrow">Theory</p><h2>The motion planning problem</h2></div>
+<div class="row" style="gap:56px">
+<div class="col" style="width:888px; gap:16px">
+<div class="panel" style="gap:8px">
+<p class="cap"><b>Given</b> the robot’s geometry, the obstacles, a start configuration and a goal,</p>
+<p class="cap"><b>find</b> a continuous path of configurations from start to goal that never touches an obstacle:</p>
+<p class="eqs">σ : [0, 1] → C_free ,   σ(0) = q_start ,   σ(1) = q_goal</p>
+</div>
+<div style="display:grid; grid-template-columns:250px 1fr; column-gap:24px; row-gap:12px">
+<h3 class="blue">Path vs trajectory</h3><p class="cap">A path is geometry only. A trajectory adds timing: where to be at each instant, within speed and torque limits.</p>
+<h3 class="blue">Complete</h3><p class="cap">Finds a path whenever one exists and reports failure otherwise. Weaker forms: resolution complete (grids) and probabilistically complete (sampling).</p>
+<h3 class="blue">Optimal</h3><p class="cap">Returns the cheapest path, usually the shortest. Asymptotically optimal planners approach it as they run longer.</p>
+<h3 class="orange">Hardness</h3><p class="cap">The general problem is PSPACE-hard (Reif, 1979). Exact planners scale exponentially with the number of joints, so practical ones trade guarantees for speed.</p>
+</div>
+</div>
+<div style="position:relative; width:720px; height:600px">
+<svg aria-label="A start point, a goal and three obstacles. The straight line between start and goal crosses an obstacle; a curved path goes around all three" style="position:absolute; left:0; top:0" width="720" height="540" viewBox="0 0 720 540">
+<rect x="0" y="0" width="720" height="540" rx="12" fill="#EBE7DC"/>
+<rect x="210" y="180" width="140" height="220" rx="10" fill="#44535D"/>
+<rect x="450" y="60" width="90" height="190" rx="10" fill="#44535D"/>
+<rect x="460" y="370" width="180" height="90" rx="10" fill="#44535D"/>
+<path d="M90 440 L630 100" stroke="#B8481A" stroke-width="3" stroke-dasharray="8 10"/>
+<path d="M90 440 C 170 500, 330 510, 400 440 C 430 410, 420 340, 470 315 C 540 280, 610 240, 630 100" fill="none" stroke="#1F5FBF" stroke-width="5" stroke-linecap="round"/>
+<circle cx="630" cy="100" r="16" fill="#EBE7DC" stroke="#B8481A" stroke-width="5"/>
+<circle cx="90" cy="440" r="13" fill="#1F5FBF"/>
+<circle cx="90" cy="440" r="9" fill="#16242E"><animateMotion dur="6s" begin="0.8s" repeatCount="indefinite" path="M0 0 C 80 60, 240 70, 310 0 C 340 -30, 330 -100, 380 -125 C 450 -160, 520 -200, 540 -340" keyPoints="0;1;1" keyTimes="0;0.8;1" calcMode="linear"/></circle>
+</svg>
+<p class="cap" style="position:absolute; left:40px; top:466px; width:120px"><b>start</b></p>
+<p class="cap" style="position:absolute; left:600px; top:30px; width:100px"><b>goal</b></p>
+<p class="cap orange" style="position:absolute; left:40px; top:300px; width:160px">straight line: collides</p>
+<p class="cap blue" style="position:absolute; left:250px; top:488px; width:200px">a valid path</p>
+<p class="cap" style="position:absolute; left:0; top:556px; width:720px">Drawn in 2D for clarity. For an arm the same picture lives in joint space.</p>
+</div>
+</div>
+<p class="foot">Part 3 · Motion planning</p>
+</section>
+<!-- 16 · cspace -->
+<section id="cspace" class="dark" data-transition="fade">
+<div class="head"><p class="eyebrow">Theory · live demo</p><h2>Configuration space: the robot becomes a point</h2></div>
+<div class="left">
+<p class="lead">The robot shrinks to a point; the obstacles change shape.</p>
+<p class="soft">Every configuration q is either in collision or free. Marking all the colliding ones gives the C-space obstacles; what is left is the free space, C_free.</p>
+<div class="col" style="gap:6px"><h3 class="orange">Phase 1 of the demo</h3><p class="cap">The shoulder sweeps a full turn. For each q₁, every q₂ that makes the arm hit a disc is painted orange.</p></div>
+<div class="col" style="gap:6px"><h3 class="blue">Phase 2</h3><p class="cap">A point slides along a path through the dark region. The arm on the left follows without touching anything.</p></div>
+<p class="cap">Three round discs become three curved blobs. With 7 joints the map is seven-dimensional: it cannot be drawn or stored in full.</p>
+</div>
+<x-embed style="position:absolute; left:880px; top:282px; width:912px; height:638px"><template><style>html,body{margin:0;height:100%;overflow:hidden}canvas{display:block}</style><canvas id="c"></canvas><script>
+const W=912,H=638,c=document.getElementById('c'),g=c.getContext('2d'),F='px system-ui,-apple-system,Segoe UI,sans-serif';
+function fit(){const s=Math.min(innerWidth/W,innerHeight/H)||1;c.width=Math.max(2,innerWidth*2);c.height=Math.max(2,innerHeight*2);c.style.width=innerWidth+'px';c.style.height=innerHeight+'px';g.setTransform(2*s,0,0,2*s,0,0)}
+fit();addEventListener('resize',fit);
+function bg(){g.clearRect(0,0,W,H);g.fillStyle='#0B171F';g.beginPath();if(g.roundRect)g.roundRect(0,0,W,H,14);else g.rect(0,0,W,H);g.fill()}
+function txt(s,x,y,col,sz,al){g.fillStyle=col||'#E9EEF0';g.font=(sz||24)+F;g.textAlign=al||'left';g.fillText(s,x,y)}
+function line(x1,y1,x2,y2,col,w){g.strokeStyle=col;g.lineWidth=w||2;g.lineCap='round';g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke()}
+function dot(x,y,r,fill,stroke,w){g.beginPath();g.arc(x,y,r,0,6.2832);if(fill){g.fillStyle=fill;g.fill()}if(stroke){g.strokeStyle=stroke;g.lineWidth=w||4;g.stroke()}}
+const PI=Math.PI,bx=215,by=330,L1=105,L2=85,obs=[[330,234,32],[76,250,30],[240,473,28]],N=72,CX=478,CY=112,CS=410,cell=CS/N;
+function fk(q1,q2){const ex=bx+L1*Math.cos(q1),ey=by-L1*Math.sin(q1);return[ex,ey,ex+L2*Math.cos(q1+q2),ey-L2*Math.sin(q1+q2)]}
+function sd(px,py,ax,ay,qx,qy){const vx=qx-ax,vy=qy-ay,t=Math.max(0,Math.min(1,((px-ax)*vx+(py-ay)*vy)/(vx*vx+vy*vy)));return Math.hypot(px-ax-t*vx,py-ay-t*vy)}
+function coll(q1,q2){const p=fk(q1,q2);for(const o of obs)if(sd(o[0],o[1],bx,by,p[0],p[1])<o[2]+8||sd(o[0],o[1],p[0],p[1],p[2],p[3])<o[2]+7)return true;return false}
+const ang=i=>-PI+(i+.5)*2*PI/N,grid=[];for(let j=0;j<N;j++)for(let i=0;i<N;i++)grid.push(coll(ang(i),ang(j)));
+function near(i0,j0){let b=0,bd=1e9;for(let n=0;n<N*N;n++)if(!grid[n]){const d=Math.hypot(n%N-i0,((n/N)|0)-j0);if(d<bd){bd=d;b=n}}return b}
+function bfs(s,t){const pv=new Int32Array(N*N).fill(-1),Q=[s];pv[s]=s;for(let h=0;h<Q.length;h++){const u=Q[h],i=u%N,j=(u/N)|0;for(const m of[[1,0],[-1,0],[0,1],[0,-1]]){const a=i+m[0],b=j+m[1];if(a<0||b<0||a>=N||b>=N)continue;const v=b*N+a;if(grid[v]||pv[v]>=0)continue;pv[v]=u;Q.push(v)}}const p=[];if(pv[t]<0)return p;for(let u=t;u!=s;u=pv[u])p.push(u);p.push(s);return p.reverse()}
+const raw=grid.slice();for(let j=0;j<N;j++)for(let i=0;i<N;i++)if(!raw[j*N+i])for(let b=-3;b<=3&&!grid[j*N+i];b++)for(let a=-3;a<=3;a++){const x=i+a,y=j+b;if(x>=0&&y>=0&&x<N&&y<N&&raw[y*N+x]){grid[j*N+i]=2;break}}
+const path=bfs(near(6,62),near(40,14));
+const cx=q=>CX+(q+PI)/(2*PI)*CS,cy=q=>CY+CS-(q+PI)/(2*PI)*CS;
+let ph=0,sw=0,pi=0;
+function frame(){bg();txt('Workspace',20,60,'#A9BAC2');txt('Configuration space',CX,60,'#A9BAC2');
+g.fillStyle='#13242F';g.fillRect(CX,CY,CS,CS);
+const cols=ph==0?Math.floor(sw*N):N;g.fillStyle='#FF9A5C';
+for(let j=0;j<N;j++)for(let i=0;i<cols;i++)if(grid[j*N+i]==1)g.fillRect(CX+i*cell,CY+CS-(j+1)*cell,cell+.6,cell+.6);
+txt('q₁',CX+CS-28,CY+CS+34,'#A9BAC2');txt('q₂',CX-40,CY+26,'#A9BAC2');txt('−180°',CX,CY+CS+34,'#A9BAC2');
+let q1,q2;
+if(ph==0){q1=-PI+sw*2*PI;q2=1.4*Math.sin(sw*9);line(cx(q1),CY,cx(q1),CY+CS,'#E9EEF0',2);sw+=1/300;if(sw>=1){ph=1;pi=0}}
+else{g.strokeStyle='#5B9DFF';g.lineWidth=4;g.beginPath();path.forEach((u,n)=>{const X=cx(ang(u%N)),Y=cy(ang((u/N)|0));n?g.lineTo(X,Y):g.moveTo(X,Y)});g.stroke();
+const f=Math.max(0,Math.min(path.length-1.001,pi)),a=path[Math.floor(f)],b=path[Math.floor(f)+1]||a,r=f-Math.floor(f);
+q1=ang(a%N)*(1-r)+ang(b%N)*r;q2=ang((a/N)|0)*(1-r)+ang((b/N)|0)*r;pi+=0.4;if(pi>path.length+100||!path.length){ph=0;sw=0}}
+const hit=coll(q1,q2);dot(cx(q1),cy(q2),8,hit?'#FF9A5C':'#E9EEF0','#0B171F',3);
+for(const o of obs)dot(o[0],o[1],o[2],'#36505F','#5B6B75',2);
+const p=fk(q1,q2);line(bx,by,p[0],p[1],hit?'#B5622F':'#2F7BEA',14);line(p[0],p[1],p[2],p[3],hit?'#FF9A5C':'#5B9DFF',12);dot(bx,by,10,'#0B171F','#E9EEF0',3);dot(p[0],p[1],8,'#0B171F','#E9EEF0',3);
+dot(32,592,9,'#FF9A5C');txt('collision',50,601,'#A9BAC2');dot(182,592,9,'#13242F','#5B6B75',2);txt('free',200,601,'#A9BAC2');
+txt(ph==0?'Phase 1: sweep and mark':'Phase 2: follow a free path',CX,601,'#E9EEF0');
+requestAnimationFrame(frame)}
+frame();
+</script></template></x-embed>
+<p class="foot">Part 3 · Motion planning</p>
+</section>
+<!-- 17 · taxonomy -->
+<section id="taxonomy" data-transition="fade">
+<div class="head"><p class="eyebrow">Taxonomy</p><h2>Five families of motion planners</h2></div>
+<div style="display:grid; grid-template-columns:repeat(5, 1fr); column-gap:20px; row-gap:14px">
+<p class="tag in" style="--i:0">Graph search</p>
+<p class="tag in" style="--i:1">Sampling</p>
+<p class="tag in" style="--i:2">Optimization</p>
+<p class="tag in" style="--i:3">Reactive</p>
+<p class="tag warm in" style="--i:4">Learning</p>
+<p class="cap"><b>Idea.</b> Cut the space into a grid or lattice, then search the graph.</p>
+<p class="cap"><b>Idea.</b> Probe random configurations and connect the collision-free ones.</p>
+<p class="cap"><b>Idea.</b> Start from a guess and descend a cost over the whole trajectory.</p>
+<p class="cap"><b>Idea.</b> Compute the next move from the current state only, with no lookahead.</p>
+<p class="cap"><b>Idea.</b> Fit the planner, or the whole policy, to data.</p>
+<p class="mono blue">Dijkstra, A*, D* Lite, state lattices</p>
+<p class="mono blue">PRM, RRT, RRT-Connect, RRT*, BIT*</p>
+<p class="mono blue">CHOMP, STOMP, TrajOpt, iLQR, MPC</p>
+<p class="mono blue">Potential fields, DWA, RMPs</p>
+<p class="mono orange">BC, RL, Diffusion Policy, VLAs</p>
+<p class="cap"><b>Good.</b> Complete and optimal at the grid’s resolution.</p>
+<p class="cap"><b>Good.</b> Scales to 7 or more joints. Probabilistically complete.</p>
+<p class="cap"><b>Good.</b> Smooth, fast, handles dynamics and limits.</p>
+<p class="cap"><b>Good.</b> Runs at control rate. Reacts to moving obstacles.</p>
+<p class="cap"><b>Good.</b> Works from raw images. Handles contact and clutter.</p>
+<p class="cap"><b>Limit.</b> Cell count explodes beyond about four dimensions.</p>
+<p class="cap"><b>Limit.</b> Jerky paths that need smoothing. Slow in narrow passages.</p>
+<p class="cap"><b>Limit.</b> Only locally optimal. A bad guess gets stuck.</p>
+<p class="cap"><b>Limit.</b> Traps in local minima. No guarantee of arrival.</p>
+<p class="cap"><b>Limit.</b> Needs data. Few guarantees outside what it has seen.</p>
+</div>
+<p class="cap" style="margin-top:auto">Real systems combine them: a sampling planner finds a global path, optimization smooths it, and a reactive layer handles surprises. Slides 18–25 cover the first four; Part 4 covers the fifth.</p>
+<p class="foot">Part 3 · Motion planning</p>
+</section>
+<!-- 18 · astar -->
+<section id="astar" class="dark" data-transition="fade">
+<div class="head"><p class="eyebrow">Graph search · live demo</p><h2>A*: search a grid, guided by a heuristic</h2></div>
+<div class="left">
+<p class="soft">Cut the configuration space into cells. Free neighbouring cells are connected. Always expand the open cell with the lowest score:</p>
+<div class="panel" style="gap:4px"><p class="eq">f(n) = g(n) + h(n)</p><p class="cap">g: cost paid from the start. h: estimated cost left to the goal.</p></div>
+<div class="col" style="gap:6px"><h3 style="color:#A9BAC2">h = 0: Dijkstra</h3><p class="cap">No guidance. The search spreads evenly in every direction until it happens to reach the goal.</p></div>
+<div class="col" style="gap:6px"><h3 class="blue">h = distance to goal: A*</h3><p class="cap">If h never overestimates (it is “admissible”), the path is still the shortest, and far fewer cells are expanded.</p></div>
+</div>
+<x-embed style="position:absolute; left:880px; top:282px; width:912px; height:638px"><template><style>html,body{margin:0;height:100%;overflow:hidden}canvas{display:block}</style><canvas id="c"></canvas><script>
+const W=912,H=638,c=document.getElementById('c'),g=c.getContext('2d'),F='px system-ui,-apple-system,Segoe UI,sans-serif';
+function fit(){const s=Math.min(innerWidth/W,innerHeight/H)||1;c.width=Math.max(2,innerWidth*2);c.height=Math.max(2,innerHeight*2);c.style.width=innerWidth+'px';c.style.height=innerHeight+'px';g.setTransform(2*s,0,0,2*s,0,0)}
+fit();addEventListener('resize',fit);
+function bg(){g.clearRect(0,0,W,H);g.fillStyle='#0B171F';g.beginPath();if(g.roundRect)g.roundRect(0,0,W,H,14);else g.rect(0,0,W,H);g.fill()}
+function txt(s,x,y,col,sz,al){g.fillStyle=col||'#E9EEF0';g.font=(sz||24)+F;g.textAlign=al||'left';g.fillText(s,x,y)}
+const CW=38,CH=22,S=22,OX=38,OY=76,wall=new Uint8Array(CW*CH);
+function wl(x0,y0,x1,y1){for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)wall[y*CW+x]=1}
+wl(9,3,10,17);wl(18,0,19,12);wl(18,16,19,21);wl(27,6,28,21);wl(10,3,14,4);wl(23,12,28,13);
+const st=4+11*CW,go=34+11*CW,hx=n=>Math.abs(n%CW-go%CW)+Math.abs(((n/CW)|0)-((go/CW)|0));
+let mode=0,gs,par,state,open,path,cnt,hold,last=[0,0];
+function reset(){gs=new Float32Array(CW*CH).fill(1e9);par=new Int32Array(CW*CH).fill(-1);state=new Uint8Array(CW*CH);open=[st];gs[st]=0;state[st]=1;path=null;cnt=0;hold=0}
+function step(){if(!open.length){path=[];return}let bi=0,bf=1e9;for(let i=0;i<open.length;i++){const n=open[i],f=gs[n]+(mode?hx(n)*1.001:0);if(f<bf){bf=f;bi=i}}
+const u=open.splice(bi,1)[0];state[u]=2;cnt++;if(u==go){path=[];for(let n=go;n!=-1;n=par[n])path.push(n);last[mode]=cnt;return}
+const x=u%CW,y=(u/CW)|0;for(const m of[[1,0],[-1,0],[0,1],[0,-1]]){const a=x+m[0],b=y+m[1];if(a<0||b<0||a>=CW||b>=CH)continue;const v=b*CW+a;if(wall[v]||state[v]==2)continue;if(gs[u]+1<gs[v]){gs[v]=gs[u]+1;par[v]=u;if(state[v]!=1){state[v]=1;open.push(v)}}}}
+function cellr(n,col){g.fillStyle=col;g.fillRect(OX+(n%CW)*S+1,OY+((n/CW)|0)*S+1,S-2,S-2)}
+reset();
+function frame(){if(!path){for(let i=0;i<(mode?2:4)&&!path;i++)step()}else if(++hold>170){mode=1-mode;reset()}
+bg();for(let n=0;n<CW*CH;n++)cellr(n,wall[n]?'#44606F':state[n]==2?'#1F4E8C':state[n]==1?'#5B9DFF':'#13242F');
+if(path)for(const n of path)cellr(n,'#FF9A5C');
+cellr(st,'#E9EEF0');cellr(go,'#FF9A5C');
+txt(mode?'A*  (h = Manhattan distance)':'Dijkstra  (h = 0)',OX,50,mode?'#7DB3FF':'#E9EEF0',26);txt('expanded: '+cnt,W-OX,50,'#E9EEF0',26,'right');
+let s='white: start   orange: goal, path   blue: explored';if(path&&last[0]&&last[1])s='Same shortest path. Dijkstra expanded '+last[0]+', A* '+last[1]+'.';txt(s,OX,604,'#A9BAC2');
+requestAnimationFrame(frame)}
+frame();
+</script></template></x-embed>
+<p class="foot">Part 3 · Motion planning</p>
+</section>
+<!-- 19 · curse -->
+<section id="curse" class="accent" data-transition="fade">
+<div class="head"><p class="eyebrow">Why grids stop working</p><h2>Cells multiply with every joint</h2></div>
+<p class="lead" style="width:1300px">Divide each joint’s range into 100 steps. The grid then has 100ⁿ cells for n joints.</p>
+<div class="row" style="gap:28px; margin-top:auto">
+<div class="col grow" style="gap:8px; border-top:3px solid #F6F4EE; padding-top:24px"><p class="label">2 joints</p><p class="big">10⁴</p><p class="cap" style="color:#F6F4EE">Ten thousand cells. A* finishes in milliseconds.</p></div>
+<div class="col grow" style="gap:8px; border-top:3px solid #F6F4EE; padding-top:24px"><p class="label">3 joints</p><p class="big">10⁶</p><p class="cap" style="color:#F6F4EE">A million. Still fine.</p></div>
+<div class="col grow" style="gap:8px; border-top:3px solid #F6F4EE; padding-top:24px"><p class="label">6 joints</p><p class="big">10¹²</p><p class="cap" style="color:#F6F4EE">A trillion. More than fits in memory.</p></div>
+<div class="col grow" style="gap:8px; border-top:3px solid #F6F4EE; padding-top:24px"><p class="label">7 joints</p><p class="big">10¹⁴</p><p class="cap" style="color:#F6F4EE">At a million collision checks per second, visiting every cell once takes about three years.</p></div>
+</div>
+<p class="lead" style="width:1400px; margin-top:auto">Sampling-based planners sidestep this. They never build the grid; they only probe it at random points.</p>
+<p class="foot">Part 3 · Motion planning</p>
+</section>
+<!-- 20 · prm -->
+<section id="prm" class="dark" data-transition="fade">
+<div class="head"><p class="eyebrow">Sampling · live demo</p><h2>PRM: build a roadmap once, query it often</h2></div>
+<div class="left">
+<p class="soft">The probabilistic roadmap (Kavraki et al., 1996) never represents the obstacles explicitly. It only asks a collision checker “is this configuration free?”</p>
+<div class="col" style="gap:6px"><h3 class="blue">1 · Sample</h3><p class="cap">Draw random configurations. Keep the collision-free ones as nodes.</p></div>
+<div class="col" style="gap:6px"><h3 class="blue">2 · Connect</h3><p class="cap">Join each node to its nearest neighbours when the straight segment between them is free.</p></div>
+<div class="col" style="gap:6px"><h3 class="orange">3 · Query</h3><p class="cap">Attach start and goal to the graph and run A* or Dijkstra on it.</p></div>
+<p class="cap">Best when the scene is static and many queries follow, as in a fixed work cell. With too few samples the roadmap misses narrow gaps and the query fails.</p>
+</div>
+<x-embed style="position:absolute; left:880px; top:282px; width:912px; height:638px"><template><style>html,body{margin:0;height:100%;overflow:hidden}canvas{display:block}</style><canvas id="c"></canvas><script>
+const W=912,H=638,c=document.getElementById('c'),g=c.getContext('2d'),F='px system-ui,-apple-system,Segoe UI,sans-serif';
+function fit(){const s=Math.min(innerWidth/W,innerHeight/H)||1;c.width=Math.max(2,innerWidth*2);c.height=Math.max(2,innerHeight*2);c.style.width=innerWidth+'px';c.style.height=innerHeight+'px';g.setTransform(2*s,0,0,2*s,0,0)}
+fit();addEventListener('resize',fit);
+function bg(){g.clearRect(0,0,W,H);g.fillStyle='#0B171F';g.beginPath();if(g.roundRect)g.roundRect(0,0,W,H,14);else g.rect(0,0,W,H);g.fill()}
+function txt(s,x,y,col,sz,al){g.fillStyle=col||'#E9EEF0';g.font=(sz||24)+F;g.textAlign=al||'left';g.fillText(s,x,y)}
+function dot(x,y,r,fill,stroke,w){g.beginPath();g.arc(x,y,r,0,6.2832);if(fill){g.fillStyle=fill;g.fill()}if(stroke){g.strokeStyle=stroke;g.lineWidth=w||4;g.stroke()}}
+const R=[30,70,882,590],O=[[230,70,60,290],[230,450,60,140],[450,230,60,360],[660,70,60,230],[660,400,60,190]],S0=[110,300],G0=[810,480];
+let seed=11;function rnd(){seed=(seed+0x6D2B79F5)|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}
+function inO(x,y){for(const o of O)if(x>o[0]-5&&x<o[0]+o[2]+5&&y>o[1]-5&&y<o[1]+o[3]+5)return true;return false}
+function free(a,b){const n=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/5));for(let i=0;i<=n;i++){const t=i/n;if(inO(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t))return false}return true}
+function world(){g.fillStyle='#13242F';g.fillRect(R[0],R[1],R[2]-R[0],R[3]-R[1]);g.fillStyle='#44606F';for(const o of O)g.fillRect(o[0],o[1],o[2],o[3])}
+function ends(){dot(S0[0],S0[1],10,'#E9EEF0');dot(G0[0],G0[1],12,null,'#FF9A5C',4);dot(G0[0],G0[1],4,'#FF9A5C')}
+let P,E,ph,ci,path,hold;
+function reset(){P=[S0,G0];E=[];ph=0;ci=0;path=null;hold=0}
+function connect(i){const d=[];for(let j=0;j<P.length;j++){if(j==i)continue;const r=Math.hypot(P[j][0]-P[i][0],P[j][1]-P[i][1]);if(r<150)d.push([r,j])}d.sort((a,b)=>a[0]-b[0]);for(const e of d.slice(0,7))if(free(P[i],P[e[1]]))E.push([i,e[1],e[0]])}
+function query(){const n=P.length,adj=P.map(()=>[]);for(const e of E){adj[e[0]].push([e[1],e[2]]);adj[e[1]].push([e[0],e[2]])}
+const D=new Float64Array(n).fill(1e9),pv=new Int32Array(n).fill(-1),done=new Uint8Array(n);D[0]=0;
+for(;;){let u=-1;for(let i=0;i<n;i++)if(!done[i]&&D[i]<1e9&&(u<0||D[i]<D[u]))u=i;if(u<0||u==1)break;done[u]=1;for(const a of adj[u])if(D[u]+a[1]<D[a[0]]){D[a[0]]=D[u]+a[1];pv[a[0]]=u}}
+const p=[];if(D[1]>=1e9)return p;for(let u=1;u!=-1;u=pv[u])p.push(u);return p}
+function frame(){
+if(ph==0){for(let k=0;k<2;k++){const x=R[0]+rnd()*(R[2]-R[0]),y=R[1]+rnd()*(R[3]-R[1]);if(!inO(x,y))P.push([x,y])}if(P.length>=150)ph=1}
+else if(ph==1){for(let k=0;k<2&&ci<P.length;k++)connect(ci++);if(ci>=P.length){path=query();ph=2}}
+else if(++hold>210)reset();
+bg();world();g.strokeStyle='#2B5C9E';g.lineWidth=1.5;g.beginPath();for(const e of E){g.moveTo(P[e[0]][0],P[e[0]][1]);g.lineTo(P[e[1]][0],P[e[1]][1])}g.stroke();
+for(let i=2;i<P.length;i++)dot(P[i][0],P[i][1],3.5,'#7DB3FF');
+if(path&&path.length){g.strokeStyle='#FF9A5C';g.lineWidth=5;g.lineJoin='round';g.beginPath();path.forEach((u,i)=>i?g.lineTo(P[u][0],P[u][1]):g.moveTo(P[u][0],P[u][1]));g.stroke()}
+ends();txt(['1 · Sample free configurations','2 · Connect near neighbours','3 · Query the roadmap'][ph],30,46,'#E9EEF0',26);
+txt(ph==2?(path.length?'path found':'no path: roadmap disconnected'):'nodes '+P.length+'   edges '+E.length,882,46,ph==2?'#FF9A5C':'#A9BAC2',24,'right');
+txt('white: start   orange ring: goal   grey: obstacles',30,622,'#A9BAC2');
+requestAnimationFrame(frame)}
+reset();frame();
+</script></template></x-embed>
+<p class="foot">Part 3 · Motion planning</p>
+</section>
+<!-- 21 · rrt -->
+<section id="rrt" class="dark" data-transition="fade">
+<div class="head"><p class="eyebrow">Sampling · live demo</p><h2>RRT: grow a tree toward random samples</h2></div>
+<div class="left">
+<p class="soft">The rapidly-exploring random tree (LaValle, 1998) answers one query with no roadmap.</p>
+<p class="code">repeat<br>&#160;&#160;q_rand ← random configuration<br>&#160;&#160;q_near ← nearest node in the tree<br>&#160;&#160;q_new&#160; ← one step from q_near<br>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;toward q_rand<br>&#160;&#160;if segment is collision-free<br>&#160;&#160;&#160;&#160;add q_new to the tree<br>until q_new reaches the goal</p>
+<p class="cap"><b>Why it explores fast.</b> Frontier nodes border the largest empty regions, so random samples usually pull the tree outward.</p>
+<p class="cap"><b>RRT-Connect</b> grows one tree from each end until they meet. It is the default planner in MoveIt.</p>
+</div>
+<x-embed style="position:absolute; left:880px; top:282px; width:912px; height:638px"><template><style>html,body{margin:0;height:100%;overflow:hidden}canvas{display:block}</style><canvas id="c"></canvas><script>
+const W=912,H=638,c=document.getElementById('c'),g=c.getContext('2d'),F='px system-ui,-apple-system,Segoe UI,sans-serif';
+function fit(){const s=Math.min(innerWidth/W,innerHeight/H)||1;c.width=Math.max(2,innerWidth*2);c.height=Math.max(2,innerHeight*2);c.style.width=innerWidth+'px';c.style.height=innerHeight+'px';g.setTransform(2*s,0,0,2*s,0,0)}
+fit();addEventListener('resize',fit);
+function bg(){g.clearRect(0,0,W,H);g.fillStyle='#0B171F';g.beginPath();if(g.roundRect)g.roundRect(0,0,W,H,14);else g.rect(0,0,W,H);g.fill()}
+function txt(s,x,y,col,sz,al){g.fillStyle=col||'#E9EEF0';g.font=(sz||24)+F;g.textAlign=al||'left';g.fillText(s,x,y)}
+function dot(x,y,r,fill,stroke,w){g.beginPath();g.arc(x,y,r,0,6.2832);if(fill){g.fillStyle=fill;g.fill()}if(stroke){g.strokeStyle=stroke;g.lineWidth=w||4;g.stroke()}}
+const R=[30,70,882,590],O=[[230,70,60,290],[230,450,60,140],[450,230,60,360],[660,70,60,230],[660,400,60,190]],S0=[110,300],G0=[810,480];
+let seed=3;function rnd(){seed=(seed+0x6D2B79F5)|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}
+function inO(x,y){for(const o of O)if(x>o[0]-5&&x<o[0]+o[2]+5&&y>o[1]-5&&y<o[1]+o[3]+5)return true;return false}
+function free(a,b){const n=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/5));for(let i=0;i<=n;i++){const t=i/n;if(inO(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t))return false}return true}
+function world(){g.fillStyle='#13242F';g.fillRect(R[0],R[1],R[2]-R[0],R[3]-R[1]);g.fillStyle='#44606F';for(const o of O)g.fillRect(o[0],o[1],o[2],o[3])}
+function ends(){dot(S0[0],S0[1],10,'#E9EEF0');dot(G0[0],G0[1],12,null,'#FF9A5C',4);dot(G0[0],G0[1],4,'#FF9A5C')}
+const STEP=26;let T,par,path,hold,smp,shown,fc=0;
+function reset(){T=[S0];par=[-1];path=null;hold=0;smp=null;shown=null}
+function grow(){const q=rnd()<0.07?G0:[R[0]+rnd()*(R[2]-R[0]),R[1]+rnd()*(R[3]-R[1])];smp=q;let b=0,bd=1e9;
+for(let i=0;i<T.length;i++){const d=Math.hypot(T[i][0]-q[0],T[i][1]-q[1]);if(d<bd){bd=d;b=i}}
+if(bd<1)return;const s=Math.min(1,STEP/bd),n=[T[b][0]+(q[0]-T[b][0])*s,T[b][1]+(q[1]-T[b][1])*s];if(!free(T[b],n))return;T.push(n);par.push(b);
+if(Math.hypot(n[0]-G0[0],n[1]-G0[1])<STEP&&free(n,G0)){T.push(G0);par.push(T.length-2);path=[];for(let u=T.length-1;u!=-1;u=par[u])path.push(u)}}
+function frame(){fc++;if(!path){for(let k=0;k<3&&!path;k++)grow();if(T.length>3000)reset();if(fc%20==0)shown=smp}else if(++hold>200)reset();
+bg();world();g.strokeStyle='#3D7BD9';g.lineWidth=2;g.beginPath();for(let i=1;i<T.length;i++){g.moveTo(T[par[i]][0],T[par[i]][1]);g.lineTo(T[i][0],T[i][1])}g.stroke();
+if(shown&&!path)dot(shown[0],shown[1],7,null,'#E9EEF0',2);
+if(path){g.strokeStyle='#FF9A5C';g.lineWidth=5;g.lineJoin='round';g.beginPath();path.forEach((u,i)=>i?g.lineTo(T[u][0],T[u][1]):g.moveTo(T[u][0],T[u][1]));g.stroke()}
+ends();txt(path?'Goal reached: path read back through parents':'Growing toward random samples',30,46,path?'#FF9A5C':'#E9EEF0',26);
+txt('nodes '+T.length,882,46,'#A9BAC2',24,'right');txt('white ring: a recent random sample',30,622,'#A9BAC2');
+requestAnimationFrame(frame)}
+reset();frame();
+</script></template></x-embed>
+<p class="foot">Part 3 · Motion planning</p>
+</section>
+<!-- 22 · rrtstar -->
+<section id="rrtstar" class="dark" data-transition="fade">
+<div class="head"><p class="eyebrow">Sampling · live demo</p><h2>RRT*: keep improving after the first path</h2></div>
+<div class="left">
+<p class="soft">RRT stops at its first path, which is usually crooked. RRT* (Karaman and Frazzoli, 2011) adds two steps for every new node:</p>
+<div class="col" style="gap:6px"><h3 class="blue">Choose the best parent</h3><p class="cap">Among all tree nodes within a radius, attach to the one giving the lowest total cost from the start.</p></div>
+<div class="col" style="gap:6px"><h3 class="blue">Rewire the neighbours</h3><p class="cap">If routing a nearby node through the new one is cheaper, change that node’s parent.</p></div>
+<div class="panel" style="gap:6px"><p class="label orange">Asymptotic optimality</p><p class="cap">As the number of samples grows, the path cost converges to the optimum with probability 1. You choose when to stop. Informed RRT* and BIT* get there faster.</p></div>
+</div>
+<x-embed style="position:absolute; left:880px; top:282px; width:912px; height:638px"><template><style>html,body{margin:0;height:100%;overflow:hidden}canvas{display:block}</style><canvas id="c"></canvas><script>
+const W=912,H=638,c=document.getElementById('c'),g=c.getContext('2d'),F='px system-ui,-apple-system,Segoe UI,sans-serif';
+function fit(){const s=Math.min(innerWidth/W,innerHeight/H)||1;c.width=Math.max(2,innerWidth*2);c.height=Math.max(2,innerHeight*2);c.style.width=innerWidth+'px';c.style.height=innerHeight+'px';g.setTransform(2*s,0,0,2*s,0,0)}
+fit();addEventListener('resize',fit);
+function bg(){g.clearRect(0,0,W,H);g.fillStyle='#0B171F';g.beginPath();if(g.roundRect)g.roundRect(0,0,W,H,14);else g.rect(0,0,W,H);g.fill()}
+function txt(s,x,y,col,sz,al){g.fillStyle=col||'#E9EEF0';g.font=(sz||24)+F;g.textAlign=al||'left';g.fillText(s,x,y)}
+function dot(x,y,r,fill,stroke,w){g.beginPath();g.arc(x,y,r,0,6.2832);if(fill){g.fillStyle=fill;g.fill()}if(stroke){g.strokeStyle=stroke;g.lineWidth=w||4;g.stroke()}}
+const R=[30,70,882,590],O=[[230,70,60,290],[230,450,60,140],[450,230,60,360],[660,70,60,230],[660,400,60,190]],S0=[110,300],G0=[810,480];
+let seed=5;function rnd(){seed=(seed+0x6D2B79F5)|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}
+function inO(x,y){for(const o of O)if(x>o[0]-5&&x<o[0]+o[2]+5&&y>o[1]-5&&y<o[1]+o[3]+5)return true;return false}
+function free(a,b){const n=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/5));for(let i=0;i<=n;i++){const t=i/n;if(inO(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t))return false}return true}
+function world(){g.fillStyle='#13242F';g.fillRect(R[0],R[1],R[2]-R[0],R[3]-R[1]);g.fillStyle='#44606F';for(const o of O)g.fillRect(o[0],o[1],o[2],o[3])}
+function ends(){dot(S0[0],S0[1],10,'#E9EEF0');dot(G0[0],G0[1],12,null,'#FF9A5C',4);dot(G0[0],G0[1],4,'#FF9A5C')}
+const STEP=28,RAD=60,MAXN=1500;let T,par,cst,kids,best,bcost,first,hold;
+function reset(){T=[S0];par=[-1];cst=[0];kids=[[]];best=-1;bcost=0;first=0;hold=0}
+function grow(){const q=rnd()<0.05?G0:[R[0]+rnd()*(R[2]-R[0]),R[1]+rnd()*(R[3]-R[1])];let b=0,bd=1e9;
+for(let i=0;i<T.length;i++){const d=Math.hypot(T[i][0]-q[0],T[i][1]-q[1]);if(d<bd){bd=d;b=i}}
+if(bd<1)return;const s=Math.min(1,STEP/bd),n=[T[b][0]+(q[0]-T[b][0])*s,T[b][1]+(q[1]-T[b][1])*s];if(inO(n[0],n[1]))return;
+const near=[];for(let i=0;i<T.length;i++){const d=Math.hypot(T[i][0]-n[0],T[i][1]-n[1]);if(d<RAD)near.push([i,d])}
+let p=-1,pc=1e9;for(const e of near){const k=cst[e[0]]+e[1];if(k<pc&&free(T[e[0]],n)){p=e[0];pc=k}}
+if(p<0)return;const id=T.length;T.push(n);par.push(p);cst.push(pc);kids.push([]);kids[p].push(id);
+for(const e of near){const j=e[0],k=pc+e[1];if(j==p||k>=cst[j]-0.01||!free(n,T[j]))continue;const a=kids[par[j]];a.splice(a.indexOf(j),1);par[j]=id;kids[id].push(j);const dl=k-cst[j],st=[j];while(st.length){const u=st.pop();cst[u]+=dl;for(const v of kids[u])st.push(v)}}}
+function goal(){let b=-1,bc=1e9;for(let i=0;i<T.length;i++){const d=Math.hypot(T[i][0]-G0[0],T[i][1]-G0[1]);if(d<42&&cst[i]+d<bc&&free(T[i],G0)){b=i;bc=cst[i]+d}}best=b;bcost=bc;if(b>=0&&!first)first=bc}
+function frame(){if(T.length<MAXN){for(let k=0;k<5;k++)grow();goal()}else if(++hold>230)reset();
+bg();world();g.strokeStyle='#28517F';g.lineWidth=1.3;g.beginPath();for(let i=1;i<T.length;i++){g.moveTo(T[par[i]][0],T[par[i]][1]);g.lineTo(T[i][0],T[i][1])}g.stroke();
+if(best>=0){g.strokeStyle='#FF9A5C';g.lineWidth=5;g.lineJoin='round';g.beginPath();g.moveTo(G0[0],G0[1]);for(let u=best;u!=-1;u=par[u])g.lineTo(T[u][0],T[u][1]);g.stroke()}
+ends();txt(T.length<MAXN?'Sampling and rewiring':'Stopped at '+MAXN+' nodes',30,46,'#E9EEF0',26);txt('nodes '+T.length,882,46,'#A9BAC2',24,'right');
+txt(first?'path length: first '+(first/100).toFixed(2)+' m, now '+(bcost/100).toFixed(2)+' m':'no path yet',30,622,first?'#FF9A5C':'#A9BAC2');
+requestAnimationFrame(frame)}
+reset();frame();
+</script></template></x-embed>
+<p class="foot">Part 3 · Motion planning</p>
+</section>
+<!-- 23 · trajopt -->
+<section id="trajopt" class="dark" data-transition="fade">
+<div class="head"><p class="eyebrow">Optimization · live demo</p><h2>Trajectory optimization: bend a guess into shape</h2></div>
+<div class="left">
+<p class="soft">Represent the whole motion as a chain of waypoints q₀ … q_T. Start from any guess, even one that collides, and descend a cost:</p>
+<div class="panel" style="gap:4px"><p class="eqs">J = Σ ‖qₜ₊₁ − qₜ‖² + λ Σ c_obs(qₜ)</p><p class="cap">First term: smoothness. Second term: penalty that grows as a waypoint nears an obstacle.</p></div>
+<p class="cap"><b>CHOMP</b> follows the gradient using a distance field. <b>STOMP</b> samples noisy variations instead of gradients. <b>TrajOpt</b> treats collisions as hard constraints in a sequence of convex problems.</p>
+<div class="col" style="gap:6px"><h3 class="orange">The catch: local optima</h3><p class="cap">The demo alternates two initial guesses. Each converges, but to a different path with a different cost. Nothing tells the optimizer that a better route exists.</p></div>
+</div>
+<x-embed style="position:absolute; left:880px; top:282px; width:912px; height:638px"><template><style>html,body{margin:0;height:100%;overflow:hidden}canvas{display:block}</style><canvas id="c"></canvas><script>
+const W=912,H=638,c=document.getElementById('c'),g=c.getContext('2d'),F='px system-ui,-apple-system,Segoe UI,sans-serif';
+function fit(){const s=Math.min(innerWidth/W,innerHeight/H)||1;c.width=Math.max(2,innerWidth*2);c.height=Math.max(2,innerHeight*2);c.style.width=innerWidth+'px';c.style.height=innerHeight+'px';g.setTransform(2*s,0,0,2*s,0,0)}
+fit();addEventListener('resize',fit);
+function bg(){g.clearRect(0,0,W,H);g.fillStyle='#0B171F';g.beginPath();if(g.roundRect)g.roundRect(0,0,W,H,14);else g.rect(0,0,W,H);g.fill()}
+function txt(s,x,y,col,sz,al){g.fillStyle=col||'#E9EEF0';g.font=(sz||24)+F;g.textAlign=al||'left';g.fillText(s,x,y)}
+function dot(x,y,r,fill,stroke,w){g.beginPath();g.arc(x,y,r,0,6.2832);if(fill){g.fillStyle=fill;g.fill()}if(stroke){g.strokeStyle=stroke;g.lineWidth=w||4;g.stroke()}}
+const A=[70,335],B=[842,335],O=[[300,305,78],[520,390,66],[690,275,60]],N=50,EPS=34;let X,X0,it,run=0,hold;
+function init(){X=[];for(let i=0;i<N;i++){const t=i/(N-1);X.push([A[0]+(B[0]-A[0])*t,A[1]-(run?Math.sin(t*Math.PI)*215:0)])}X0=X.map(p=>p.slice());it=0;hold=0}
+function costs(){let s=0,o=0;for(let i=0;i<N-1;i++)s+=(X[i+1][0]-X[i][0])**2+(X[i+1][1]-X[i][1])**2;for(const p of X)for(const k of O){const d=Math.hypot(p[0]-k[0],p[1]-k[1])-k[2];if(d<EPS)o+=(EPS-d)**2}return[s/1000,o/1000]}
+function opt(){const Y=X.map(p=>p.slice());for(let i=1;i<N-1;i++){let fx=0.3*(X[i-1][0]+X[i+1][0]-2*X[i][0]),fy=0.3*(X[i-1][1]+X[i+1][1]-2*X[i][1]);
+for(const k of O){const dx=X[i][0]-k[0],dy=X[i][1]-k[1],r=Math.hypot(dx,dy)||1,d=r-k[2];if(d<EPS){fx+=0.1*(EPS-d)*dx/r;fy+=0.1*(EPS-d)*dy/r}}Y[i][0]+=fx;Y[i][1]+=fy}X=Y;it++}
+function poly(P,col,w,dash){g.setLineDash(dash||[]);g.strokeStyle=col;g.lineWidth=w;g.lineJoin='round';g.beginPath();P.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.stroke();g.setLineDash([])}
+init();
+function frame(){if(it<560){opt();opt()}else if(++hold>160){run=1-run;init()}
+bg();for(const k of O){dot(k[0],k[1],k[2],'#36505F');g.setLineDash([4,8]);dot(k[0],k[1],k[2]+EPS,null,'#36505F',2);g.setLineDash([])}
+poly(X0,'#7C8B94',2,[8,10]);poly(X,'#FF9A5C',4);for(let i=0;i<N;i+=2)dot(X[i][0],X[i][1],4,'#FF9A5C');
+dot(A[0],A[1],10,'#E9EEF0');dot(B[0],B[1],12,null,'#FF9A5C',4);
+const k=costs();txt(run?'Guess B: an arc over the top':'Guess A: a straight line',30,46,'#E9EEF0',26);txt('iteration '+it,882,46,'#A9BAC2',24,'right');
+txt('smoothness '+k[0].toFixed(1)+'   obstacle '+k[1].toFixed(1)+'   total '+(k[0]+k[1]).toFixed(1),30,612,it<560?'#A9BAC2':'#FF9A5C');
+txt('dashed grey: initial guess',30,578,'#7C8B94');
+requestAnimationFrame(frame)}
+frame();
+</script></template></x-embed>
+<p class="foot">Part 3 · Motion planning</p>
+</section>
+<!-- 24 · timeparam -->
+<section id="timeparam" data-transition="fade">
+<div class="head"><p class="eyebrow">Theory</p><h2>From path to trajectory: adding the clock</h2></div>
+<div class="row" style="gap:56px">
+<div class="col" style="width:760px; gap:18px">
+<p class="soft">A path has no timing. Time parameterization assigns a time to every point without exceeding the robot’s limits.</p>
+<div style="display:grid; grid-template-columns:230px 1fr; column-gap:24px; row-gap:14px">
+<h3 class="blue">Trapezoidal</h3><p class="cap">Accelerate at the limit, cruise at top speed, decelerate. Simple and common. Acceleration jumps, so the motion can jerk.</p>
+<h3 class="blue">Polynomial, S-curve</h3><p class="cap">Cubic or quintic splines through the waypoints. Acceleration is continuous, so motion is smoother and gentler on the gears.</p>
+<h3 class="blue">Time-optimal</h3><p class="cap">TOPP-RA finds the fastest timing along a fixed path under velocity, acceleration and torque limits.</p>
+</div>
+<div class="panel"><p class="label orange">Why it matters for learning</p><p class="cap">Learned policies output sparse waypoints. The same interpolation and limit checks run underneath.</p></div>
+</div>
+<div style="position:relative; width:848px; height:620px">
+<svg aria-label="Three stacked plots against time for a trapezoidal profile: position rises in an S shape, velocity is a trapezoid, acceleration is a positive step, zero, then a negative step" style="position:absolute; left:0; top:0" width="848" height="620" viewBox="0 0 848 620">
+<rect x="150" y="40" width="170" height="540" fill="#DCE7F8"/>
+<rect x="660" y="40" width="170" height="540" fill="#F6DFD2"/>
+<g stroke="#C9C2B0" stroke-width="2"><path d="M150 200 L830 200"/><path d="M150 390 L830 390"/><path d="M150 510 L830 510"/><path d="M150 40 L150 580"/></g>
+<g stroke="#44535D" stroke-width="2" stroke-dasharray="6 8"><path d="M150 270 L830 270"/><path d="M150 460 L830 460"/><path d="M150 560 L830 560"/></g>
+<path d="M150 200 Q 235 200, 320 176.7 L 660 83.3 Q 745 60, 830 60" fill="none" stroke="#16242E" stroke-width="5" stroke-linecap="round"/>
+<path d="M150 390 L320 270 L660 270 L830 390" fill="none" stroke="#1F5FBF" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M150 460 L320 460 L320 510 L660 510 L660 560 L830 560" fill="none" stroke="#B8481A" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>
+<p class="cap" style="position:absolute; left:150px; top:0; width:170px; text-align:center">accelerate</p>
+<p class="cap" style="position:absolute; left:320px; top:0; width:340px; text-align:center">cruise</p>
+<p class="cap" style="position:absolute; left:660px; top:0; width:170px; text-align:center">decelerate</p>
+<p class="label" style="position:absolute; left:0; top:104px; width:140px">position q</p>
+<p class="label blue" style="position:absolute; left:0; top:314px; width:140px">velocity</p>
+<p class="label orange" style="position:absolute; left:0; top:478px; width:140px">accel.</p>
+<p class="cap" style="position:absolute; left:340px; top:226px; width:300px">speed limit</p>
+<p class="cap" style="position:absolute; left:340px; top:416px; width:300px">acceleration limit</p>
+<p class="cap" style="position:absolute; left:150px; top:584px; width:680px; text-align:center">time →</p>
+</div>
+</div>
+<p class="foot">Part 3 · Motion planning</p>
+</section>
+<!-- 25 · reactive -->
+<section id="reactive" class="dark" data-transition="fade">
+<div class="head"><p class="eyebrow">Reactive · live demo</p><h2>Potential fields: roll downhill to the goal</h2></div>
+<div class="left">
+<p class="soft">Skip planning. Pretend the goal attracts the robot and each obstacle repels it (Khatib, 1986), then follow the combined force every tick.</p>
+<div class="panel" style="gap:4px"><p class="eqs">U(q) = U_goal(q) + Σ U_obs(q) ,   q̇ = −∇U(q)</p></div>
+<div class="col" style="gap:6px"><h3 class="blue">Scene A</h3><p class="cap">Scattered obstacles. The robot slides around them and arrives. Cost: one gradient per tick.</p></div>
+<div class="col" style="gap:6px"><h3 class="orange">Scene B</h3><p class="cap">A U-shaped wall. Attraction and repulsion cancel inside the cup: a local minimum. The robot stops short.</p></div>
+<p class="cap">Hence the usual pairing: a global planner for the route, a reactive layer for surprises. MPC sits in between, re-optimizing a short horizon every tick.</p>
+</div>
+<x-embed style="position:absolute; left:880px; top:282px; width:912px; height:638px"><template><style>html,body{margin:0;height:100%;overflow:hidden}canvas{display:block}</style><canvas id="c"></canvas><script>
+const W=912,H=638,c=document.getElementById('c'),g=c.getContext('2d'),F='px system-ui,-apple-system,Segoe UI,sans-serif';
+function fit(){const s=Math.min(innerWidth/W,innerHeight/H)||1;c.width=Math.max(2,innerWidth*2);c.height=Math.max(2,innerHeight*2);c.style.width=innerWidth+'px';c.style.height=innerHeight+'px';g.setTransform(2*s,0,0,2*s,0,0)}
+fit();addEventListener('resize',fit);
+function bg(){g.clearRect(0,0,W,H);g.fillStyle='#0B171F';g.beginPath();if(g.roundRect)g.roundRect(0,0,W,H,14);else g.rect(0,0,W,H);g.fill()}
+function txt(s,x,y,col,sz,al){g.fillStyle=col||'#E9EEF0';g.font=(sz||24)+F;g.textAlign=al||'left';g.fillText(s,x,y)}
+function dot(x,y,r,fill,stroke,w){g.beginPath();g.arc(x,y,r,0,6.2832);if(fill){g.fillStyle=fill;g.fill()}if(stroke){g.strokeStyle=stroke;g.lineWidth=w||4;g.stroke()}}
+const G=[820,330],S=[80,345],D0=75,ETA=9000,trap=[];
+for(const x of[400,436,472,508])trap.push([x,226,20],[x,434,20]);for(const y of[240,274,308,342,376,410])trap.push([540,y,20]);
+const SC=[[[330,290,48],[520,410,54],[610,235,42]],trap];
+let sc=0,p,tr,st,hold,fc;
+function reset(){p=S.slice();tr=[];st=0;hold=0;fc=0}
+function force(x,y){const ob=SC[sc];let dx=G[0]-x,dy=G[1]-y,d=Math.hypot(dx,dy)||1,fx=dx/d,fy=dy/d;
+for(const o of ob){const ex=x-o[0],ey=y-o[1],r=Math.hypot(ex,ey)||1,s=Math.max(3,r-o[2]);if(s<D0){const m=ETA*(1/s-1/D0)/(s*s);fx+=m*ex/r;fy+=m*ey/r}}return[fx,fy]}
+reset();
+function frame(){fc++;
+if(!st){const f=force(p[0],p[1]),m=Math.hypot(f[0],f[1]),k=Math.min(2.4,2.2*m)/(m||1);p[0]+=f[0]*k;p[1]+=f[1]*k;tr.push(p.slice());
+if(Math.hypot(p[0]-G[0],p[1]-G[1])<8)st=1;else if(tr.length>90){const q=tr[tr.length-90];if(Math.hypot(p[0]-q[0],p[1]-q[1])<5)st=2}if(tr.length>1500)st=2}
+else if(++hold>170){sc=1-sc;reset()}
+bg();g.strokeStyle='#2C4657';g.lineWidth=2;g.lineCap='round';
+for(let y=100;y<570;y+=42)for(let x=50;x<880;x+=42){let inside=false;for(const o of SC[sc])if(Math.hypot(x-o[0],y-o[1])<o[2]+4)inside=true;if(inside)continue;const f=force(x,y),m=Math.hypot(f[0],f[1])||1,ux=f[0]/m,uy=f[1]/m;
+g.beginPath();g.moveTo(x-9*ux,y-9*uy);g.lineTo(x+9*ux,y+9*uy);g.lineTo(x+9*ux-6*ux+4*uy,y+9*uy-6*uy-4*ux);g.moveTo(x+9*ux,y+9*uy);g.lineTo(x+9*ux-6*ux-4*uy,y+9*uy-6*uy+4*ux);g.stroke()}
+for(const o of SC[sc])dot(o[0],o[1],o[2],'#44606F');
+g.strokeStyle='#FF9A5C';g.lineWidth=4;g.lineJoin='round';g.beginPath();tr.forEach((q,i)=>i?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]));g.stroke();
+dot(G[0],G[1],13,null,'#E9EEF0',4);dot(G[0],G[1],4,'#E9EEF0');dot(p[0],p[1],10,'#FF9A5C','#0B171F',3);
+txt(sc?'Scene B: a U-shaped wall':'Scene A: scattered obstacles',30,46,'#E9EEF0',26);
+txt(['following the force','goal reached','stuck in a local minimum'][st],882,46,st==2?'#FF9A5C':st==1?'#7DB3FF':'#A9BAC2',24,'right');
+txt('arrows: direction of −∇U   orange: robot and its trace',30,612,'#A9BAC2');
+requestAnimationFrame(frame)}
+frame();
+</script></template></x-embed>
+<p class="foot">Part 3 · Motion planning</p>
+</section>
+<!-- 26 · pipeline -->
+<section id="pipeline" data-transition="fade">
+<div class="head"><p class="eyebrow">Putting it together</p><h2>A classical pick-and-place pipeline</h2></div>
+<div class="row" style="gap:10px; align-items:stretch">
+<div class="card grow in" style="--i:0; padding:22px 22px"><p class="label blue">1 · Scene</p><h3>Model the world</h3><p class="cap">Camera depth becomes collision geometry around the robot’s own model.</p></div>
+<x-connector style="width:28px; align-self:center; color:#44535D; border-width:3px"></x-connector>
+<div class="card grow in" style="--i:1; padding:22px 22px"><p class="label blue">2 · Goal</p><h3>Solve IK</h3><p class="cap">Grasp pose for the hand becomes a goal configuration. Slide 9.</p></div>
+<x-connector style="width:28px; align-self:center; color:#44535D; border-width:3px"></x-connector>
+<div class="card grow in" style="--i:2; padding:22px 22px"><p class="label blue">3 · Plan</p><h3>Find a path</h3><p class="cap">RRT-Connect in joint space, with a collision checker. Slide 21.</p></div>
+<x-connector style="width:28px; align-self:center; color:#44535D; border-width:3px"></x-connector>
+<div class="card grow in" style="--i:3; padding:22px 22px"><p class="label blue">4 · Refine</p><h3>Smooth it</h3><p class="cap">Shortcut the zigzags, then optimize. Slide 23.</p></div>
+<x-connector style="width:28px; align-self:center; color:#44535D; border-width:3px"></x-connector>
+<div class="card grow in" style="--i:4; padding:22px 22px"><p class="label blue">5 · Time</p><h3>Add the clock</h3><p class="cap">Respect speed and acceleration limits. Slide 24.</p></div>
+<x-connector style="width:28px; align-self:center; color:#44535D; border-width:3px"></x-connector>
+<div class="card grow in" style="--i:5; padding:22px 22px"><p class="label blue">6 · Execute</p><h3>Track it</h3><p class="cap">A 1 kHz joint controller follows the trajectory. Slides 12–14.</p></div>
+</div>
+<div class="row" style="margin-top:auto">
+<div class="panel" style="flex:1"><h3>Software that packages this</h3><p class="cap"><b>MoveIt 2</b> runs the whole pipeline on ROS 2. <b>OMPL</b> supplies the sampling planners. <b>cuRobo</b> does GPU-parallel trajectory optimization. <b>Drake</b> and <b>Pinocchio</b> provide kinematics and dynamics.</p></div>
+<div class="panel" style="flex:1"><h3 class="orange">What the pipeline assumes</h3><p class="cap">Accurate geometry of every object. A scene that holds still while the arm moves. A grasp pose handed in from somewhere. Rigid objects and little contact. Each assumption is a place where learning now enters: Part 4.</p></div>
+</div>
+<p class="foot">Part 3 · Motion planning</p>
+</section>
+<!-- 27 · bridge -->
+<section id="bridge" data-transition="fade" style="gap:28px">
+<div class="head"><p class="eyebrow">Bridge</p><h2>What learning replaces in the classical stack</h2></div>
+<table>
+<tr class="th"><th style="width:17%">Classical module</th><th style="width:27%">Where it struggles</th><th style="width:30%">Learned counterpart</th><th>Examples</th></tr>
+<tr><td>Perception</td><td>Needs object models and careful calibration</td><td>Networks that map pixels to poses, grasps or features</td><td>Dex-Net, Contact-GraspNet, pretrained vision encoders</td></tr>
+<tr><td>Motion planning</td><td>Slow in clutter; needs full scene geometry</td><td>Learned samplers and planners that propose paths directly</td><td>Motion Planning Networks, Diffuser</td></tr>
+<tr><td>Control</td><td>Needs accurate dynamics; contact is hard to model</td><td>Policies trained by reinforcement learning in simulation</td><td>Legged locomotion, in-hand manipulation</td></tr>
+<tr><td>The whole stack</td><td>Errors pile up at every hand-off between modules</td><td>One end-to-end visuomotor policy: images in, actions out</td><td>Diffusion Policy, ACT, RT-2, OpenVLA, π0</td></tr>
+</table>
+<div class="row" style="margin-top:auto">
+<div class="card grow"><p class="tag">Modular learning</p><p class="cap">Swap one box for a network and keep the rest. Each piece can be tested alone, and the classical parts keep their guarantees.</p></div>
+<div class="card grow"><p class="tag warm">End-to-end learning</p><p class="cap">One network from pixels to motor targets. Nothing to hand off, but it needs far more data and is harder to debug.</p></div>
+<div class="card grow"><p class="tag">Your ML background applies</p><p class="cap">Part 4 is supervised learning, generative modelling and RL. The twist: data is costly, sequential, and shaped by your own outputs.</p></div>
+</div>
+<p class="foot">Part 4 · Robot learning</p>
+</section>
+<!-- 28 · policy -->
+<section id="policy" data-transition="fade">
+<div class="head"><p class="eyebrow">Theory</p><h2>A policy maps observations to actions</h2></div>
+<div class="row" style="gap:14px; align-items:center">
+<div class="card grow" style="padding:20px 24px; gap:2px"><h3>Observation oₜ</h3><p class="cap">images, joint angles, instruction</p></div>
+<x-connector style="width:56px; color:#44535D; border-width:3px"></x-connector>
+<div class="card grow" style="padding:20px 24px; gap:2px; background:#DCE7F8; border:1px solid #1F5FBF"><h3 class="blue">Policy π_θ</h3><p class="cap">a neural network with weights θ</p></div>
+<x-connector style="width:56px; color:#44535D; border-width:3px"></x-connector>
+<div class="card grow" style="padding:20px 24px; gap:2px"><h3>Action aₜ</h3><p class="cap">targets for the low-level controller</p></div>
+<x-connector style="width:56px; color:#44535D; border-width:3px"></x-connector>
+<div class="card grow" style="padding:20px 24px; gap:2px; background:#16242E; border:1px solid #16242E"><h3 style="color:#F6F4EE">Robot and world</h3><p class="cap" style="color:#C9D3D8">produce the next observation</p></div>
+</div>
+<p class="cap" style="text-align:center">The loop repeats 10 to 50 times per second. Formally: aₜ ~ π_θ(a | oₜ), a Markov decision process seen through partial observations (a POMDP).</p>
+<div class="row" style="margin-top:auto">
+<div class="col grow" style="gap:8px"><h3 class="blue">What goes in</h3><p class="cap">One or more camera views, often a wrist camera plus a fixed one. Proprioception: joint angles and gripper opening. Sometimes a language instruction and a short history.</p></div>
+<div class="col grow" style="gap:8px"><h3 class="blue">What comes out</h3><p class="cap">Joint position targets, or a small change of the hand pose plus gripper open or close. Torques are common only in simulation RL. The choice of action space affects how easy learning is.</p></div>
+<div class="col grow" style="gap:8px"><h3 class="orange">Action chunking</h3><p class="cap">Predict the next H actions at once (H of 8 to 100), execute some of them, then predict again. Chunks give smoother motion and fewer decision points where errors can enter.</p></div>
+</div>
+<p class="foot">Part 4 · Robot learning</p>
+</section>
+<!-- 29 · bc -->
+<section id="bc" data-transition="fade">
+<div class="head"><p class="eyebrow">Imitation learning</p><h2>Behaviour cloning: copy the demonstrator</h2></div>
+<div class="row" style="gap:56px">
+<div class="col" style="width:800px; gap:18px">
+<p class="soft">A person teleoperates the robot and every step is logged as a pair (observation, action). Training is then ordinary supervised learning:</p>
+<div class="panel"><p class="eq">L(θ) = E ‖ π_θ(o) − a ‖²</p></div>
+<div class="col" style="gap:6px"><h3 class="orange">The catch: compounding error</h3><p class="cap">Supervised learning assumes test inputs look like training inputs. Here the policy’s own actions decide its next input. One small error leads to a state no demo visited, where the next prediction is worse. Over T steps the error can grow like T², not T (Ross and Bagnell, 2010).</p></div>
+<div class="col" style="gap:6px"><h3 class="blue">Remedies</h3><p class="cap">DAgger: let the policy drive, have the expert relabel the states it reaches, retrain. Demonstrations that include recoveries. Action chunking. Much more, and more varied, data.</p></div>
+</div>
+<div style="position:relative; width:808px; height:600px">
+<svg aria-label="A blue expert path inside a shaded band of states covered by demonstrations. An orange policy rollout follows it at first, then leaves the band and drifts away" style="position:absolute; left:0; top:0" width="808" height="520" viewBox="0 0 808 520">
+<rect x="0" y="0" width="808" height="520" rx="12" fill="#EBE7DC"/>
+<path d="M50 400 C 260 400, 360 190, 760 130" fill="none" stroke="#C9DBF5" stroke-width="96" stroke-linecap="round"/>
+<path d="M50 400 C 260 400, 360 190, 760 130" fill="none" stroke="#1F5FBF" stroke-width="5" stroke-linecap="round"/>
+<path d="M50 400 C 250 404, 330 262, 470 262 C 570 262, 660 340, 750 440" fill="none" stroke="#B8481A" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 12"/>
+<circle cx="50" cy="400" r="12" fill="#16242E"/>
+<circle cx="50" cy="400" r="10" fill="#B8481A"><animateMotion dur="6s" begin="0.8s" repeatCount="indefinite" path="M0 0 C 200 4, 280 -138, 420 -138 C 520 -138, 610 -60, 700 40" keyPoints="0;1;1" keyTimes="0;0.8;1" calcMode="linear"/></circle>
+</svg>
+<p class="cap" style="position:absolute; left:24px; top:440px; width:120px"><b>start</b></p>
+<p class="cap blue" style="position:absolute; left:500px; top:60px; width:290px"><b>expert demonstrations</b></p>
+<p class="cap" style="position:absolute; left:110px; top:210px; width:240px">shaded: states the training data covers</p>
+<p class="cap orange" style="position:absolute; left:604px; top:222px; width:180px"><b>policy rollout</b></p>
+<p class="cap orange" style="position:absolute; left:400px; top:440px; width:300px">outside the data: errors feed on themselves</p>
+<p class="cap" style="position:absolute; left:0; top:540px; width:808px">The rollout tracks the expert while it stays inside the shaded band, then drifts.</p>
+</div>
+</div>
+<p class="foot">Part 4 · Robot learning</p>
+</section>
+<!-- 30 · multimodal -->
+<section id="multimodal" data-transition="fade">
+<div class="head"><p class="eyebrow">Imitation learning</p><h2>Why plain regression averages into the obstacle</h2></div>
+<div class="row" style="gap:56px">
+<div style="position:relative; width:760px; height:600px">
+<svg aria-label="Demonstrations pass an obstacle either above or below. Their average is a straight line through the obstacle" style="position:absolute; left:0; top:0" width="760" height="500" viewBox="0 0 760 500">
+<rect x="0" y="0" width="760" height="500" rx="12" fill="#EBE7DC"/>
+<circle cx="380" cy="250" r="78" fill="#44535D"/>
+<g fill="none" stroke="#1F5FBF" stroke-width="3" stroke-linecap="round">
+<path d="M70 250 C 220 60, 540 60, 690 250"/><path d="M70 250 C 230 90, 530 85, 690 250"/><path d="M70 250 C 210 30, 550 40, 690 250"/><path d="M70 250 C 240 110, 520 110, 690 250"/>
+<path d="M70 250 C 220 440, 540 440, 690 250"/><path d="M70 250 C 230 410, 530 415, 690 250"/><path d="M70 250 C 210 470, 550 460, 690 250"/><path d="M70 250 C 240 390, 520 390, 690 250"/>
+</g>
+<path d="M70 250 L690 250" stroke="#F0803C" stroke-width="6" stroke-dasharray="14 12" stroke-linecap="round"/>
+<circle cx="70" cy="250" r="13" fill="#16242E"/>
+<circle cx="690" cy="250" r="15" fill="#EBE7DC" stroke="#16242E" stroke-width="5"/>
+</svg>
+<p class="cap blue" style="position:absolute; left:260px; top:18px; width:300px"><b>half the demos go over</b></p>
+<p class="cap blue" style="position:absolute; left:260px; top:448px; width:300px"><b>half go under</b></p>
+<p class="cap orange" style="position:absolute; left:486px; top:258px; width:200px"><b>their average</b></p>
+<p class="cap" style="position:absolute; left:0; top:520px; width:760px">Both ways around are correct. The mean of two correct answers is a collision.</p>
+</div>
+<div class="col grow" style="gap:18px">
+<p class="soft">Minimizing squared error makes the network output the average action for each observation, E[a | o]. Human demonstrations are multimodal, so the average can be an action nobody ever took.</p>
+<p class="label">The fix: model the whole distribution p(a | o), then sample from it</p>
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:18px">
+<div class="card" style="padding:20px 24px"><h3>Discrete tokens</h3><p class="cap">Bin each action dimension and classify. RT-1, RT-2, OpenVLA.</p></div>
+<div class="card" style="padding:20px 24px"><h3>Latent variable</h3><p class="cap">A CVAE picks a “style”, a transformer decodes a chunk. ACT.</p></div>
+<div class="card" style="padding:20px 24px"><h3 class="orange">Diffusion</h3><p class="cap">Denoise random noise into an action chunk. Diffusion Policy.</p></div>
+<div class="card" style="padding:20px 24px"><h3 class="orange">Flow matching</h3><p class="cap">Same idea along straighter paths, so fewer steps. π0, SmolVLA.</p></div>
+</div>
+</div>
+</div>
+<p class="foot">Part 4 · Robot learning</p>
+</section>
+<!-- 31 · diffusion -->
+<section id="diffusion" class="dark" data-transition="fade">
+<div class="head"><p class="eyebrow">Generative policies · live demo</p><h2>Diffusion policy: denoise noise into actions</h2></div>
+<div class="left" style="gap:20px">
+<div class="col" style="gap:6px"><h3 class="blue">Training</h3><p class="cap">Take a demonstrated action chunk a⁰. Corrupt it with Gaussian noise ε at a random level k. Train the network to recover the noise, given the observation o:</p></div>
+<div class="panel"><p class="eqs">L = E ‖ ε − ε_θ(aᵏ, k, o) ‖²</p></div>
+<div class="col" style="gap:6px"><h3 class="blue">Acting</h3><p class="cap">Draw pure noise. Apply the network K times (10 to 100), removing a little noise each time. Execute the first few actions of the result, observe, repeat.</p></div>
+<div class="col" style="gap:6px"><h3 class="orange">Why it suits robots</h3><p class="cap">Different noise draws settle into different modes, so nothing is averaged. Training is a stable regression, and whole action sequences come out smooth.</p></div>
+</div>
+<x-embed style="position:absolute; left:880px; top:282px; width:912px; height:638px"><template><style>html,body{margin:0;height:100%;overflow:hidden}canvas{display:block}</style><canvas id="c"></canvas><script>
+const W=912,H=638,c=document.getElementById('c'),g=c.getContext('2d'),F='px system-ui,-apple-system,Segoe UI,sans-serif';
+function fit(){const s=Math.min(innerWidth/W,innerHeight/H)||1;c.width=Math.max(2,innerWidth*2);c.height=Math.max(2,innerHeight*2);c.style.width=innerWidth+'px';c.style.height=innerHeight+'px';g.setTransform(2*s,0,0,2*s,0,0)}
+fit();addEventListener('resize',fit);
+function bg(){g.clearRect(0,0,W,H);g.fillStyle='#0B171F';g.beginPath();if(g.roundRect)g.roundRect(0,0,W,H,14);else g.rect(0,0,W,H);g.fill()}
+function txt(s,x,y,col,sz,al){g.fillStyle=col||'#E9EEF0';g.font=(sz||24)+F;g.textAlign=al||'left';g.fillText(s,x,y)}
+function dot(x,y,r,fill,stroke,w){g.beginPath();g.arc(x,y,r,0,6.2832);if(fill){g.fillStyle=fill;g.fill()}if(stroke){g.strokeStyle=stroke;g.lineWidth=w||4;g.stroke()}}
+let seed=9;function rnd(){seed=(seed+0x6D2B79F5)|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}
+function gs(){return Math.sqrt(-2*Math.log(rnd()+1e-9))*Math.cos(6.2832*rnd())}
+const A=[80,330],B=[832,330],OB=[456,330,82],M=22,N=26,K=60,SG=120,CY=330;let X0,EP,f;
+function init(){X0=[];EP=[];for(let m=0;m<M;m++){const amp=(135+55*rnd())*(m%2?1:-1),sk=0.85+0.3*rnd(),a=[],e=[];
+for(let i=0;i<N;i++){const t=i/(N-1);a.push([A[0]+(B[0]-A[0])*t,CY+amp*Math.pow(Math.sin(Math.PI*t),sk)]);e.push([gs(),gs()])}X0.push(a);EP.push(e)}f=0}
+init();
+function frame(){f++;const T1=50,T2=290,T3=470;if(f>T3)init();
+const s=f<T1?1:f<T2?1-(f-T1)/(T2-T1):0,ab=Math.cos(s*Math.PI/2)**2,ca=Math.sqrt(ab),cn=Math.sqrt(1-ab);
+bg();dot(OB[0],OB[1],OB[2],'#36505F');
+if(s==0){g.setLineDash([12,10]);g.strokeStyle='#FF9A5C';g.lineWidth=4;g.beginPath();g.moveTo(A[0],A[1]);g.lineTo(B[0],B[1]);g.stroke();g.setLineDash([]);txt('average of the samples: a collision',456,H-70,'#FF9A5C',24,'center')}
+g.lineWidth=2;g.lineJoin='round';
+for(let m=0;m<M;m++){g.strokeStyle=m%2?'rgba(125,179,255,.85)':'rgba(169,204,255,.85)';g.beginPath();
+for(let i=0;i<N;i++){const x=456+ca*(X0[m][i][0]-456)+cn*SG*1.8*EP[m][i][0],y=CY+ca*(X0[m][i][1]-CY)+cn*SG*EP[m][i][1];i?g.lineTo(x,y):g.moveTo(x,y)}g.stroke()}
+dot(A[0],A[1],10,'#E9EEF0');dot(B[0],B[1],12,null,'#E9EEF0',4);
+const k=Math.round(s*K);txt(k==K?'k = '+K+': pure noise':k?'denoising, step k = '+k:'k = 0: '+M+' sampled action sequences',30,46,'#E9EEF0',26);
+txt('noise '+Math.round(cn*100)+'%',882,46,'#A9BAC2',24,'right');
+txt('Illustration on a known two-mode target, not a trained network',30,612,'#A9BAC2');
+requestAnimationFrame(frame)}
+frame();
+</script></template></x-embed>
+<p class="foot">Part 4 · Robot learning</p>
+</section>
+<!-- 32 · rl -->
+<section id="rl" data-transition="fade">
+<div class="head"><p class="eyebrow">Reinforcement learning</p><h2>RL: learn from trial, error and reward</h2></div>
+<div class="row" style="gap:56px">
+<div class="col" style="width:760px; gap:18px">
+<!-- Agent 0,60,260,110  Env 500,60,260,110 -->
+<div style="position:relative; width:760px; height:230px">
+<div class="card" style="position:absolute; left:0; top:60px; width:260px; height:110px; box-sizing:border-box; padding:16px 24px; gap:0; justify-content:center; background:#DCE7F8; border:1px solid #1F5FBF"><h3 class="blue">Agent</h3><p class="cap">policy π_θ</p></div>
+<div class="card" style="position:absolute; left:500px; top:60px; width:260px; height:110px; box-sizing:border-box; padding:16px 24px; gap:0; justify-content:center"><h3>Environment</h3><p class="cap">robot in simulation</p></div>
+<p class="cap" style="position:absolute; left:270px; top:44px; width:220px; text-align:center"><b>action aₜ</b></p>
+<p class="cap" style="position:absolute; left:262px; top:156px; width:236px; text-align:center"><b>state sₜ₊₁, reward rₜ</b></p>
+<x-connector x1="260" y1="92" x2="500" y2="92" style="color:#16242E; border-width:3px"></x-connector>
+<x-connector x1="500" y1="140" x2="260" y2="140" style="color:#B8481A; border-width:3px"></x-connector>
+<p class="cap" style="position:absolute; left:0; top:190px; width:760px; text-align:center">No demonstrations. The agent acts, sees a reward, and adjusts.</p>
+</div>
+<div class="panel" style="gap:6px"><p class="label blue">Objective: maximize expected discounted return</p><p class="eqs">J(θ) = E [ Σₜ γᵗ rₜ ]</p></div>
+<div class="panel" style="gap:6px"><p class="label blue">Policy gradient: make better-than-expected actions more likely</p><p class="eqs">∇J = E [ ∇ log π_θ(aₜ | sₜ) · Âₜ ]</p></div>
+</div>
+<div class="col grow" style="gap:16px">
+<div class="col" style="gap:6px"><h3 class="blue">Two algorithms to know</h3><p class="cap"><b>PPO</b>: on-policy, robust, hungry for samples. The standard with thousands of parallel simulated robots. <b>SAC</b>: off-policy with a replay buffer, far more sample-efficient. Add hindsight relabelling (HER) for goal-reaching.</p></div>
+<div class="col" style="gap:6px"><h3 class="orange">Reward design</h3><p class="cap">A sparse reward (“1 if the cube is lifted”) is honest but gives little signal. A shaped reward guides learning but invites loopholes the agent will find.</p></div>
+<div class="col" style="gap:6px"><h3 class="orange">Sample cost</h3><p class="cap">Millions to billions of steps. Too slow and too risky on hardware, so training happens in simulation and transfers afterwards: next slide.</p></div>
+<div class="col" style="gap:6px"><h3>Where it wins</h3><p class="cap">Dynamic, contact-rich skills that are hard to demonstrate: legged locomotion, in-hand manipulation, agile flight.</p></div>
+</div>
+</div>
+<p class="foot">Part 4 · Robot learning</p>
+</section>
+<!-- 33 · sim2real -->
+<section id="sim2real" data-transition="fade">
+<div class="head"><p class="eyebrow">Reinforcement learning</p><h2>Sim-to-real: crossing the reality gap</h2></div>
+<div class="row" style="gap:56px">
+<div style="position:relative; width:800px; height:610px">
+<svg aria-label="Top plot: training on one simulator setting gives a narrow peak that misses the real robot's value. Bottom plot: randomizing the setting gives a wide distribution that covers the real value" style="position:absolute; left:0; top:0" width="800" height="610" viewBox="0 0 800 610">
+<rect x="0" y="0" width="800" height="290" rx="12" fill="#EBE7DC"/>
+<rect x="0" y="320" width="800" height="290" rx="12" fill="#EBE7DC"/>
+<path d="M40 236 L760 236 M40 556 L760 556" stroke="#44535D" stroke-width="2"/>
+<path d="M200 236 C 240 236, 248 90, 270 90 C 292 90, 300 236, 340 236 Z" fill="#C9DBF5" stroke="#1F5FBF" stroke-width="4" stroke-linejoin="round"/>
+<path d="M80 556 C 240 556, 280 440, 400 440 C 520 440, 560 556, 720 556 Z" fill="#C9DBF5" stroke="#1F5FBF" stroke-width="4" stroke-linejoin="round"/>
+<path d="M540 80 L540 236 M540 400 L540 556" stroke="#B8481A" stroke-width="4" stroke-dasharray="8 8"/>
+<circle cx="540" cy="236" r="10" fill="#B8481A"/><circle cx="540" cy="556" r="10" fill="#B8481A"/>
+</svg>
+<p class="label" style="position:absolute; left:24px; top:16px; width:500px">One simulator setting</p>
+<p class="cap blue" style="position:absolute; left:120px; top:52px; width:140px; text-align:right">trained here</p>
+<p class="cap orange" style="position:absolute; left:556px; top:90px; width:230px"><b>real robot</b>: never seen in training, policy fails</p>
+<p class="cap" style="position:absolute; left:24px; top:244px; width:740px">a physical parameter, for example friction →</p>
+<p class="label" style="position:absolute; left:24px; top:336px; width:500px">Domain randomization</p>
+<p class="cap blue" style="position:absolute; left:90px; top:420px; width:200px">trained across this whole range</p>
+<p class="cap orange" style="position:absolute; left:556px; top:400px; width:230px"><b>real robot</b>: one more sample from the range</p>
+<p class="cap" style="position:absolute; left:24px; top:564px; width:740px">the same parameter, now drawn at random every episode →</p>
+</div>
+<div class="col grow" style="gap:16px">
+<p class="soft">A simulator is always a little wrong: friction, motor delay, gear backlash, camera noise, lighting. A policy can exploit those errors and then fail on hardware.</p>
+<div class="col" style="gap:4px"><h3 class="blue">Domain randomization</h3><p class="cap">Vary physics and visuals every episode, so reality looks like one more variation.</p></div>
+<div class="col" style="gap:4px"><h3 class="blue">System identification</h3><p class="cap">Measure the real robot and tune the simulator to match it.</p></div>
+<div class="col" style="gap:4px"><h3 class="blue">Teacher and student</h3><p class="cap">A teacher policy trains with privileged simulator state. A student then learns to imitate it from realistic sensors only.</p></div>
+<div class="col" style="gap:4px"><h3 class="blue">Real data in the loop</h3><p class="cap">Fine-tune on a little real experience, or rebuild real scenes as simulation assets.</p></div>
+</div>
+</div>
+<p class="foot">Part 4 · Robot learning</p>
+</section>
+<!-- 34 · vla -->
+<section id="vla" data-transition="fade">
+<div class="head"><p class="eyebrow">Foundation models</p><h2>Vision-language-action models</h2></div>
+<!-- In1 0,0,300,70  In2 0,95,300,70  In3 0,190,300,70  Enc 380,60,280,140  VLM 740,60,320,140  Head 1140,60,220,140  Out 1440,60,224,140 -->
+<div style="position:relative; width:1664px; height:262px">
+<p class="cap" style="position:absolute; left:0; top:0; width:300px; height:70px; box-sizing:border-box; background:#FDFCF8; border:1px solid #D9D3C4; border-radius:12px; line-height:68px; text-align:center; color:#16242E"><b>Camera images</b></p>
+<p class="cap" style="position:absolute; left:0; top:95px; width:300px; height:70px; box-sizing:border-box; background:#FDFCF8; border:1px solid #D9D3C4; border-radius:12px; line-height:68px; text-align:center; color:#16242E"><b>“Pick up the cup”</b></p>
+<p class="cap" style="position:absolute; left:0; top:190px; width:300px; height:70px; box-sizing:border-box; background:#FDFCF8; border:1px solid #D9D3C4; border-radius:12px; line-height:68px; text-align:center; color:#16242E"><b>Joint angles</b></p>
+<div class="card" style="position:absolute; left:380px; top:60px; width:280px; height:140px; box-sizing:border-box; padding:16px 22px; gap:2px; justify-content:center"><h3>Encoders</h3><p class="cap">vision transformer, text tokenizer</p></div>
+<div class="card" style="position:absolute; left:740px; top:60px; width:320px; height:140px; box-sizing:border-box; padding:16px 22px; gap:2px; justify-content:center; background:#DCE7F8; border:1px solid #1F5FBF"><h3 class="blue">Pretrained VLM</h3><p class="cap">language-model backbone, web-scale knowledge</p></div>
+<div class="card" style="position:absolute; left:1140px; top:60px; width:220px; height:140px; box-sizing:border-box; padding:16px 22px; gap:2px; justify-content:center; background:#F6DFD2; border:1px solid #B8481A"><h3 class="orange">Action head</h3><p class="cap">tokens or flow</p></div>
+<div class="card" style="position:absolute; left:1440px; top:60px; width:224px; height:140px; box-sizing:border-box; padding:16px 22px; gap:2px; justify-content:center; background:#16242E; border:1px solid #16242E"><h3 style="color:#F6F4EE">Action chunk</h3><p class="cap" style="color:#C9D3D8">next H targets</p></div>
+<x-connector x1="300" y1="35" x2="520" y2="60" route="hv" style="color:#44535D; border-width:3px"></x-connector>
+<x-connector x1="300" y1="130" x2="380" y2="130" style="color:#44535D; border-width:3px"></x-connector>
+<x-connector x1="300" y1="225" x2="520" y2="200" route="hv" style="color:#44535D; border-width:3px"></x-connector>
+<x-connector x1="660" y1="130" x2="740" y2="130" style="color:#44535D; border-width:3px"></x-connector>
+<x-connector x1="1060" y1="130" x2="1140" y2="130" style="color:#44535D; border-width:3px"></x-connector>
+<x-connector x1="1360" y1="130" x2="1440" y2="130" style="color:#44535D; border-width:3px"></x-connector>
+</div>
+<div class="row" style="margin-top:auto">
+<div class="col grow" style="gap:6px"><h3 class="blue">Why start from a VLM</h3><p class="cap">Robot data is scarce. A model pretrained on web images and text already knows what a “cup” looks like, so robot data only has to teach it how to move.</p></div>
+<div class="col grow" style="gap:6px"><h3 class="orange">Two kinds of action head</h3><p class="cap"><b>Tokens</b>: bin each action dimension and emit it like text (RT-2, OpenVLA). <b>Flow or diffusion</b>: a separate head generates continuous chunks (π0, GR00T N1, SmolVLA).</p></div>
+<div class="col grow" style="gap:6px"><h3>Data</h3><p class="cap">Open X-Embodiment: over a million trajectories from 22 robot types. DROID: 76 thousand trajectories in varied real scenes. Then a few dozen demos to fine-tune for your robot.</p></div>
+<div class="col grow" style="gap:6px"><h3>Size and speed</h3><p class="cap">SmolVLA 0.45 B parameters, π0 about 3.3 B, OpenVLA 7 B. The control loop has a deadline, so chunking, quantization and fast inference decide what can run on a robot.</p></div>
+</div>
+<p class="foot">Part 4 · Robot learning</p>
+</section>
+<!-- 35 · hybrid -->
+<section id="hybrid" data-transition="fade">
+<div class="head"><p class="eyebrow">Synthesis</p><h2>Planning or learning: how to choose</h2></div>
+<table>
+<tr class="th"><th style="width:20%"></th><th style="width:40%">Classical planning and control</th><th>Learned policy</th></tr>
+<tr><td>What it needs</td><td>Geometric models of robot and scene; a stated goal</td><td>Demonstrations or simulated experience</td></tr>
+<tr><td>Guarantees</td><td>Collision-free with respect to the model; completeness results</td><td>Statistical only; weak outside the training distribution</td></tr>
+<tr><td>Perception</td><td>A separate system must supply poses and geometry</td><td>Learns directly from camera images</td></tr>
+<tr><td>Contact-rich tasks</td><td>Hard: contact is difficult to model and plan through</td><td>Natural: contact is just more data</td></tr>
+<tr><td>A new task</td><td>Change the goal; no retraining</td><td>Collect data and retrain, or prompt a generalist model</td></tr>
+<tr><td>How it fails</td><td>Loudly: “no plan found”, or visibly wrong model</td><td>Quietly: a confident, plausible, wrong motion</td></tr>
+</table>
+<div class="row" style="margin-top:auto">
+<div class="panel grow"><p class="label blue">Hybrid 1 · Learn what, plan how</p><p class="cap">A network picks the grasp or the keypoints; a planner computes the collision-free motion to them.</p></div>
+<div class="panel grow"><p class="label blue">Hybrid 2 · Plan to make data</p><p class="cap">Planners generate thousands of demonstrations in simulation; a policy is then cloned from them.</p></div>
+<div class="panel grow"><p class="label blue">Hybrid 3 · Learn inside a safe shell</p><p class="cap">The policy proposes actions; classical limits, collision checks and controllers filter and execute them.</p></div>
+</div>
+<p class="foot">Part 4 · Robot learning</p>
+</section>
+<!-- 36 · simloop -->
+<section id="simloop" data-transition="fade">
+<div class="head"><p class="eyebrow">Theory</p><h2>What a physics simulator computes each step</h2></div>
+<div class="row" style="gap:10px; align-items:stretch">
+<div class="card grow in" style="--i:0; padding:22px 24px"><p class="label blue">1 · Apply controls</p><p class="cap">Your code writes motor commands. Actuator models turn them into joint torques τ.</p></div>
+<x-connector style="width:28px; align-self:center; color:#44535D; border-width:3px"></x-connector>
+<div class="card grow in" style="--i:1; padding:22px 24px"><p class="label blue">2 · Detect collisions</p><p class="cap">Find every pair of touching shapes, with contact points and normals.</p></div>
+<x-connector style="width:28px; align-self:center; color:#44535D; border-width:3px"></x-connector>
+<div class="card grow in" style="--i:2; padding:22px 24px"><p class="label blue">3 · Solve dynamics</p><p class="cap">Forward dynamics with contact forces as constraints: solve for the accelerations q̈.</p></div>
+<x-connector style="width:28px; align-self:center; color:#44535D; border-width:3px"></x-connector>
+<div class="card grow in" style="--i:3; padding:22px 24px"><p class="label blue">4 · Integrate</p><p class="cap">Advance velocities and positions by one small time step Δt.</p></div>
+<x-connector style="width:28px; align-self:center; color:#44535D; border-width:3px"></x-connector>
+<div class="card grow in" style="--i:4; padding:22px 24px"><p class="label blue">5 · Render sensors</p><p class="cap">Report joint angles, forces and camera images for your code to read.</p></div>
+</div>
+<div class="panel" style="align-items:center; gap:4px"><p class="eqs">q̈ = M(q)⁻¹ ( τ + Jᵀ f_contact − C(q, q̇) q̇ − g(q) ) ,   q̇ ← q̇ + Δt q̈ ,   q ← q + Δt q̇</p><p class="cap">The manipulator equation from slide 11, solved forward, then one semi-implicit Euler step. Repeated 200 to 1000 times per simulated second.</p></div>
+<div class="row" style="margin-top:auto">
+<div class="col grow" style="gap:6px"><h3 class="blue">The time step</h3><p class="cap">Typically 1 to 5 ms. Larger steps run faster but stiff contacts go unstable. A policy at 20 Hz acts once every 10 to 50 physics steps.</p></div>
+<div class="col grow" style="gap:6px"><h3 class="blue">Contact is the hard part</h3><p class="cap">Rigid bodies cannot overlap, so forces switch on abruptly. Each engine softens or solves this differently, and that choice is a main source of the reality gap.</p></div>
+<div class="col grow" style="gap:6px"><h3 class="blue">Robot description files</h3><p class="cap">URDF is the common exchange format: links, joints, meshes, inertias. MuJoCo’s own MJCF adds actuators, sensors and contact settings. Lab 0 writes one by hand.</p></div>
+</div>
+<p class="foot">Part 5 · Simulation</p>
+</section>
+<!-- 37 · simulators -->
+<section id="simulators" data-transition="fade">
+<div class="head"><p class="eyebrow">Landscape</p><h2>Choosing a simulator</h2></div>
+<table>
+<tr class="th"><th style="width:14%">Simulator</th><th style="width:34%">Strength</th><th style="width:27%">Runs on</th><th>Reach for it when</th></tr>
+<tr><td>MuJoCo</td><td>Accurate contact dynamics, small clean API</td><td>CPU, pip install; GPU via MJX</td><td>Learning and manipulation work</td></tr>
+<tr><td>Isaac Lab</td><td>Thousands of parallel environments</td><td>NVIDIA RTX GPU, heavy install</td><td>Large-scale RL, legged robots</td></tr>
+<tr><td>ManiSkill</td><td>GPU-parallel manipulation benchmarks</td><td>GPU, pip install</td><td>Evaluating policies at scale</td></tr>
+<tr><td>PyBullet</td><td>Very simple API, built-in IK</td><td>CPU; little active development</td><td>Older tutorials, quick tests</td></tr>
+<tr><td>Gazebo</td><td>Tight ROS 2 integration, sensors, worlds</td><td>CPU</td><td>Testing a full ROS stack</td></tr>
+<tr><td>Drake</td><td>Rigorous dynamics with built-in optimization</td><td>CPU</td><td>Model-based control research</td></tr>
+</table>
+<div class="row" style="margin-top:auto">
+<div class="panel" style="flex:3"><p class="label blue">Why MuJoCo for the labs</p><p class="cap">It installs in seconds, runs on a laptop, and exposes the quantities from Part 2 directly: mass matrix, Jacobians, inverse dynamics. LeRobot, robosuite and Gymnasium build on it, and MuJoCo Menagerie supplies models of real arms.</p></div>
+<div class="panel" style="flex:2"><p class="label orange">A habit worth forming</p><p class="cap">Keep policy code independent of the simulator. Results that survive a change of engine are more likely to survive the change to hardware.</p></div>
+</div>
+<p class="foot">Part 5 · Simulation</p>
+</section>
+<!-- 38 · labs -->
+<section id="labs" data-transition="fade">
+<div class="head"><p class="eyebrow">Hands-on</p><h2>Six labs, from kinematics to a trained policy</h2></div>
+<table>
+<tr class="th"><th style="width:6%">Lab</th><th style="width:34%">You build</th><th style="width:26%">It exercises</th><th style="width:24%">Needs</th><th>Time</th></tr>
+<tr><td>0</td><td>A two-link arm model, first simulation</td><td>MJCF and the step loop</td><td>mujoco</td><td>15 min</td></tr>
+<tr><td>1</td><td>FK, the Jacobian and numerical IK</td><td>Slides 8–10</td><td>numpy</td><td>30 min</td></tr>
+<tr><td>2</td><td>An RRT planner in joint space</td><td>Slides 16 and 21</td><td>numpy, Lab 1</td><td>45 min</td></tr>
+<tr><td>3</td><td>Closed-loop reaching in simulation</td><td>Slides 10–14</td><td>mujoco, Lab 0</td><td>45 min</td></tr>
+<tr><td>4</td><td>A behaviour-cloned policy, rolled out</td><td>Slides 29–31</td><td>torch, Lab 1</td><td>1 h</td></tr>
+<tr><td>5</td><td>An arm that learns to reach by RL</td><td>Slide 32</td><td>gymnasium, stable-baselines3</td><td>1 h</td></tr>
+</table>
+<div class="row" style="margin-top:auto; align-items:stretch">
+<div class="col" style="flex:3; gap:10px"><p class="label blue">One-time setup (Python 3.10 or newer)</p><p class="code" style="padding:16px 28px; line-height:1.3">python -m venv robot &amp;&amp; source robot/bin/activate<br>pip install numpy mujoco torch stable-baselines3<br>pip install "gymnasium[mujoco]"</p></div>
+<div class="panel" style="flex:2"><p class="label orange">How the code was checked</p><p class="cap">Every listing on the next six slides was run as printed, on the package versions listed on slide 44. Library APIs move: if something fails, compare versions first.</p></div>
+</div>
+<p class="foot">Part 6 · Hands-on</p>
+</section>
+<!-- 39 · lab0 -->
+<section id="lab0" class="dark" data-transition="fade">
+<div class="head"><p class="eyebrow">Lab 0 · mujoco</p><h2>Lab 0: describe an arm, then simulate it</h2></div>
+<div class="row" style="gap:32px">
+<div class="col" style="width:908px; gap:10px">
+<p class="label blue">arm.xml: the two-link arm in MuJoCo’s MJCF format</p>
+<p class="code" style="line-height:1.25; padding:15px 20px">&lt;mujoco&gt;<br>&#160;&lt;option gravity="0 0 0"/&gt;<br>&#160;&lt;worldbody&gt;<br>&#160;&#160;&lt;body&gt;<br>&#160;&#160;&#160;&lt;joint name="q1" axis="0 0 1" damping="0.5"/&gt;<br>&#160;&#160;&#160;&lt;geom type="capsule" size=".03" fromto="0 0 0 .4 0 0"/&gt;<br>&#160;&#160;&#160;&lt;body pos=".4 0 0"&gt;<br>&#160;&#160;&#160;&#160;&lt;joint name="q2" axis="0 0 1" damping="0.5"/&gt;<br>&#160;&#160;&#160;&#160;&lt;geom type="capsule" size=".025" fromto="0 0 0 .3 0 0"/&gt;<br>&#160;&#160;&#160;&#160;&lt;site name="tip" pos=".3 0 0"/&gt;<br>&#160;&#160;&#160;&lt;/body&gt;<br>&#160;&#160;&lt;/body&gt;<br>&#160;&lt;/worldbody&gt;<br>&#160;&lt;actuator&gt;<br>&#160;&#160;&lt;position joint="q1" kp="20"/&gt;<br>&#160;&#160;&lt;position joint="q2" kp="20"/&gt;<br>&#160;&lt;/actuator&gt;<br>&lt;/mujoco&gt;</p>
+</div>
+<div class="col grow" style="gap:10px">
+<p class="label blue">lab0.py: load it, command the joints, watch</p>
+<p class="code" style="line-height:1.25; padding:15px 20px">import mujoco, mujoco.viewer<br><br>m = mujoco.MjModel.from_xml_path("arm.xml")<br>d = mujoco.MjData(m)<br>d.ctrl[:] = [0.8, -1.2]&#160;&#160;<span class="cm"># targets (rad)</span><br>with mujoco.viewer.launch_passive(m, d) as v:<br>&#160;&#160;&#160;&#160;while v.is_running():<br>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;mujoco.mj_step(m, d)&#160;&#160;<span class="cm"># 2 ms step</span><br>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;v.sync()</p>
+<p class="cap"><b>Read the XML as a tree.</b> Nested bodies are the links. Each joint turns about z. The site marks the hand. Each actuator is a position servo: the P controller of slide 12.</p>
+<p class="cap"><b>Expect.</b> The arm swings to q = (0.8, −1.2) rad, overshoots and rings before settling, as on slide 13. Raise the damping and rerun.</p>
+<p class="cap"><b>Check.</b> d.site("tip").xpos reads (0.555, 0.170), the FK answer from slide 8.</p>
+</div>
+</div>
+<p class="foot">Part 6 · Hands-on</p>
+</section>
+<!-- 40 · lab1 -->
+<section id="lab1" class="dark" data-transition="fade">
+<div class="head"><p class="eyebrow">Lab 1 · numpy</p><h2>Lab 1: kinematics in twenty lines</h2></div>
+<div class="row" style="gap:32px">
+<p class="code" style="width:1240px; box-sizing:border-box; line-height:1.25; padding:17px 28px">import numpy as np<br>L1, L2 = 0.4, 0.3&#160;&#160;<span class="cm"># link lengths (metres)</span><br><br>def fk(q):&#160;&#160;<span class="cm"># joint angles -&gt; hand (x, y)</span><br>&#160;&#160;&#160;&#160;a, b = q[0], q[0] + q[1]<br>&#160;&#160;&#160;&#160;return np.array([L1*np.cos(a) + L2*np.cos(b), L1*np.sin(a) + L2*np.sin(b)])<br><br>def jac(q):&#160;&#160;<span class="cm"># d(hand) / d(joints), 2 x 2</span><br>&#160;&#160;&#160;&#160;a, b = q[0], q[0] + q[1]<br>&#160;&#160;&#160;&#160;return np.array([[-L1*np.sin(a) - L2*np.sin(b), -L2*np.sin(b)],<br>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;[ L1*np.cos(a) + L2*np.cos(b),&#160;&#160;L2*np.cos(b)]])<br><br>def ik(target, q=np.array([0.3, 0.3]), damp=1e-2):<br>&#160;&#160;&#160;&#160;for _ in range(100):&#160;&#160;<span class="cm"># damped least squares</span><br>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;J, err = jac(q), target - fk(q)<br>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;q = q + J.T @ np.linalg.solve(J @ J.T + damp*np.eye(2), err)<br>&#160;&#160;&#160;&#160;return q<br><br>if __name__ == "__main__":<br>&#160;&#160;&#160;&#160;q = ik(np.array([0.5, 0.2])); print(q.round(3), fk(q).round(3))</p>
+<div class="col grow" style="gap:14px">
+<p class="cap"><b>Goal.</b> Slides 8 to 10 as code: FK, the Jacobian, and IK by damped least squares.</p>
+<p class="cap"><b>Run.</b> python lab1.py</p>
+<p class="cap"><b>Expect.</b> [-0.201 1.403] [0.5 0.2]: the joint angles, then the hand back on target.</p>
+<p class="label orange">Try next</p>
+<p class="cap">Start from q = [0.3, −0.3]. You get the other elbow solution, [0.962 −1.403].</p>
+<p class="cap">Ask for [0.9, 0], out of reach. The arm stretches toward it and stops near (0.68, 0.01).</p>
+<p class="cap">Set damp=0 and start at q = [0, 0], a singularity. NumPy raises “Singular matrix”.</p>
+</div>
+</div>
+<p class="foot">Part 6 · Hands-on</p>
+</section>
+<!-- 41 · lab2 -->
+<section id="lab2" class="dark" data-transition="fade">
+<div class="head"><p class="eyebrow">Lab 2 · numpy</p><h2>Lab 2: an RRT in the arm’s joint space</h2></div>
+<div class="row" style="gap:32px">
+<p class="code" style="width:1264px; box-sizing:border-box; line-height:1.25; padding:17px 28px">import numpy as np<br>from lab1 import fk, L1<br>rng, OBS = np.random.default_rng(0), np.array([0.45, 0.35, 0.12])&#160;&#160;<span class="cm"># x, y, radius</span><br>def collides(q):&#160;&#160;<span class="cm"># sample points on both links</span><br>&#160;&#160;&#160;&#160;elbow = L1 * np.array([np.cos(q[0]), np.sin(q[0])])<br>&#160;&#160;&#160;&#160;pts = np.vstack([np.linspace([0, 0], elbow, 8), np.linspace(elbow, fk(q), 8)])<br>&#160;&#160;&#160;&#160;return np.linalg.norm(pts - OBS[:2], axis=1).min() &lt; OBS[2]<br><br>def rrt(start, goal, step=0.15):<br>&#160;&#160;&#160;&#160;nodes, parent = [np.array(start)], [0]<br>&#160;&#160;&#160;&#160;while np.linalg.norm(nodes[-1] - goal) &gt; step:<br>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;target = goal if rng.random() &lt; 0.1 else rng.uniform(-np.pi, np.pi, 2)<br>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;i = int(np.argmin([np.linalg.norm(target - n) for n in nodes]))<br>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;d = target - nodes[i]<br>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;new = nodes[i] + d * min(1.0, step / np.linalg.norm(d))<br>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;if not collides(new): nodes.append(new); parent.append(i)<br>&#160;&#160;&#160;&#160;path = [len(nodes) - 1]&#160;&#160;<span class="cm"># walk back through parents</span><br>&#160;&#160;&#160;&#160;while path[-1] != 0: path.append(parent[path[-1]])<br>&#160;&#160;&#160;&#160;return [nodes[j] for j in path[::-1]]<br>print(len(rrt([-0.5, 0.5], np.array([1.8, -0.4]))), "waypoints")</p>
+<div class="col grow" style="gap:14px">
+<p class="cap"><b>Goal.</b> Slide 21 as code, planning in (q₁, q₂) with a disc obstacle in the workspace.</p>
+<p class="cap"><b>Expect.</b> 36 waypoints. The straight line in joint space would hit the disc.</p>
+<p class="label orange">Try next</p>
+<p class="cap">Check the segment between nodes, not only the new node.</p>
+<p class="cap">Shortcut the path: join far-apart waypoints when the segment is free.</p>
+<p class="cap">Plot the tree with matplotlib.</p>
+</div>
+</div>
+<p class="foot">Part 6 · Hands-on</p>
+</section>
+<!-- 42 · lab3 -->
+<section id="lab3" class="dark" data-transition="fade">
+<div class="head"><p class="eyebrow">Lab 3 · mujoco</p><h2>Lab 3: closed-loop reaching on a physics engine</h2></div>
+<div class="row" style="gap:32px">
+<p class="code" style="width:1240px; box-sizing:border-box; line-height:1.25; padding:17px 28px">import mujoco, numpy as np<br><br>m = mujoco.MjModel.from_xml_path("arm.xml")<br>d = mujoco.MjData(m)<br>tip = m.site("tip").id<br>target = np.array([0.35, 0.40])&#160;&#160;<span class="cm"># where the tip should go (m)</span><br>jacp = np.zeros((3, m.nv))&#160;&#160;<span class="cm"># 3 x nv position Jacobian</span><br><br>mujoco.mj_forward(m, d)&#160;&#160;<span class="cm"># compute poses once</span><br>for step in range(2000):&#160;&#160;<span class="cm"># 4 s of simulated time</span><br>&#160;&#160;&#160;&#160;err = target - d.site_xpos[tip][:2]<br>&#160;&#160;&#160;&#160;mujoco.mj_jacSite(m, d, jacp, None, tip)<br>&#160;&#160;&#160;&#160;J = jacp[:2]&#160;&#160;<span class="cm"># planar arm: x and y rows</span><br>&#160;&#160;&#160;&#160;dq = J.T @ np.linalg.solve(J @ J.T + 1e-3*np.eye(2), err)<br>&#160;&#160;&#160;&#160;d.ctrl[:] = d.qpos + 0.5 * dq&#160;&#160;<span class="cm"># nudge the joint targets</span><br>&#160;&#160;&#160;&#160;mujoco.mj_step(m, d)&#160;&#160;<span class="cm"># physics does the rest</span><br>&#160;&#160;&#160;&#160;if step % 400 == 0: print(step, "error (m):", np.linalg.norm(err).round(4))<br><br>print("final tip:", d.site_xpos[tip][:2].round(3), "joints:", d.qpos.round(3))</p>
+<div class="col grow" style="gap:14px">
+<p class="cap"><b>Goal.</b> Lab 1’s IK as a feedback loop: measure the tip, correct with MuJoCo’s own Jacobian, let the servos move.</p>
+<p class="cap"><b>Expect.</b> The error falls from 0.53 m to under 1 cm. Final tip (0.349, 0.400).</p>
+<p class="label orange">Try next</p>
+<p class="cap">Wrap the loop in Lab 0’s viewer to watch it.</p>
+<p class="cap">Feed Lab 2’s waypoints to d.ctrl one by one: a planned path, executed.</p>
+<p class="cap">Swap in a Franka arm from MuJoCo Menagerie. J becomes 3 × 7.</p>
+</div>
+</div>
+<p class="foot">Part 6 · Hands-on</p>
+</section>
+<!-- 43 · lab4 -->
+<section id="lab4" class="dark" data-transition="fade">
+<div class="head"><p class="eyebrow">Lab 4 · torch</p><h2>Lab 4: clone a controller, then roll it out</h2></div>
+<div class="row" style="gap:32px">
+<p class="code" style="width:1280px; box-sizing:border-box; line-height:1.25; padding:17px 28px">import numpy as np, torch, torch.nn as nn<br>from lab1 import fk, jac<br>rng = np.random.default_rng(0)<br>T = lambda v: torch.tensor(np.array(v), dtype=torch.float32)<br>def expert(q, goal):&#160;&#160;<span class="cm"># one damped IK step (Lab 1)</span><br>&#160;&#160;&#160;&#160;J = jac(q)<br>&#160;&#160;&#160;&#160;return 0.3 * J.T @ np.linalg.solve(J @ J.T + 1e-2*np.eye(2), goal - fk(q))<br>obs, act = [], []&#160;&#160;<span class="cm"># 1. collect demonstrations</span><br>for _ in range(2000):<br>&#160;&#160;&#160;&#160;q, goal = rng.uniform(-2, 2, 2), fk(rng.uniform(-2, 2, 2))<br>&#160;&#160;&#160;&#160;for _ in range(20):<br>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;a = expert(q, goal); obs.append(np.r_[q, goal]); act.append(a); q = q + a<br>X, Y = T(obs), T(act)<br>pi = nn.Sequential(nn.Linear(4, 128), nn.ReLU(), nn.Linear(128, 2))<br>opt = torch.optim.Adam(pi.parameters(), 1e-3)<br>for epoch in range(500):&#160;&#160;<span class="cm"># 2. supervised regression</span><br>&#160;&#160;&#160;&#160;loss = ((pi(X) - Y) ** 2).mean(); opt.zero_grad(); loss.backward(); opt.step()<br>q, goal = np.array([0.3, 0.3]), np.array([0.5, 0.2])&#160;&#160;<span class="cm"># 3. roll out the clone</span><br>for _ in range(40): q = q + pi(T(np.r_[q, goal])).detach().numpy()<br>print("loss", loss.item(), "tip error (m)", np.linalg.norm(fk(q) - goal))</p>
+<div class="col grow" style="gap:14px">
+<p class="cap"><b>Goal.</b> Slide 29 as code. The expert is Lab 1’s IK step; the policy sees (q, goal) and outputs Δq.</p>
+<p class="cap"><b>Expect.</b> Loss about 0.02. The clone stops 1 to 2 cm from the goal; the expert reaches it exactly.</p>
+<p class="label orange">Try next</p>
+<p class="cap">Train on 20 demos, not 2000. The loss goes down, yet the average miss over random goals roughly triples.</p>
+<p class="cap">Then the real thing: LeRobot’s Diffusion Policy on PushT, on your GPU.</p>
+</div>
+</div>
+<p class="foot">Part 6 · Hands-on</p>
+</section>
+<!-- 44 · lab5 -->
+<section id="lab5" class="dark" data-transition="fade">
+<div class="head"><p class="eyebrow">Lab 5 · gymnasium, stable-baselines3</p><h2>Lab 5: learn to reach by trial and error</h2></div>
+<div class="row" style="gap:32px">
+<div class="col" style="width:1100px; gap:14px">
+<p class="code" style="line-height:1.25; padding:17px 28px">import gymnasium as gym, numpy as np<br>from stable_baselines3 import SAC<br><br>env = gym.make("Reacher-v5")&#160;&#160;<span class="cm"># two-link arm, random target</span><br>model = SAC("MlpPolicy", env, verbose=0)<br>model.learn(total_timesteps=20_000)&#160;&#160;<span class="cm"># 400 episodes of practice</span><br>model.save("sac_reacher")<br><br>dist = []&#160;&#160;<span class="cm"># evaluate on 50 new targets</span><br>for episode in range(50):<br>&#160;&#160;&#160;&#160;obs, info = env.reset()<br>&#160;&#160;&#160;&#160;for t in range(50):&#160;&#160;<span class="cm"># one episode is 50 steps</span><br>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;action, _ = model.predict(obs, deterministic=True)<br>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;obs, reward, done, truncated, info = env.step(action)<br>&#160;&#160;&#160;&#160;dist.append(-info["reward_dist"])&#160;&#160;<span class="cm"># fingertip to target (m)</span><br>print("mean final distance (m):", np.mean(dist))</p>
+<p class="cap"><b>Tested with</b> Python 3.13, numpy 2.5, mujoco 4.0, torch 2.15, gymnasium 1.4, stable-baselines3 2.9. All six labs ran on these versions.</p>
+</div>
+<div class="col grow" style="gap:14px">
+<p class="cap"><b>Goal.</b> Slide 32 as code. No demonstrations and no IK: SAC is given only a reward for getting the fingertip close.</p>
+<p class="cap"><b>Expect.</b> About 2 minutes on a multi-core CPU. Mean final distance near 0.05 m. Random actions average 0.18 m.</p>
+<p class="label orange">Try next</p>
+<p class="cap">Pass render_mode="human" to gym.make and watch the trained arm.</p>
+<p class="cap">Train for 100 000 steps and compare.</p>
+<p class="cap">Move to a 7-joint arm: FetchReach in Gymnasium-Robotics with hindsight replay. In testing it required a MuJoCo release older than 4.0.</p>
+</div>
+</div>
+<p class="foot">Part 6 · Hands-on</p>
+</section>
+<!-- 45 · ex1 -->
+<section id="ex1" data-transition="fade">
+<div class="head"><p class="eyebrow">Exercises</p><h2>Check yourself: motion, control and planning</h2></div>
+<div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:24px">
+<div class="card" style="padding:24px 28px"><p class="label blue">1 · Kinematics</p><p class="cap" style="color:#16242E"><b>With l₁ = 0.4 m and l₂ = 0.3 m, where is the hand at q = (90°, −90°)?</b></p><p class="cap">Link 1 points up, link 2 points along x. The hand is at (0.3, 0.4) m.</p></div>
+<div class="card" style="padding:24px 28px"><p class="label blue">2 · Inverse kinematics</p><p class="cap" style="color:#16242E"><b>Which targets of that arm have exactly one IK solution?</b></p><p class="cap">Those exactly 0.7 m or 0.1 m from the base: arm fully straight or fully folded. These are its singularities.</p></div>
+<div class="card" style="padding:24px 28px"><p class="label blue">3 · Control</p><p class="cap" style="color:#16242E"><b>A P-only joint controller sags under gravity. You double Kp. What changes?</b></p><p class="cap">The steady error halves. The damping ratio drops, so overshoot and ringing grow.</p></div>
+<div class="card" style="padding:24px 28px"><p class="label blue">4 · Search vs sampling</p><p class="cap" style="color:#16242E"><b>Why is grid A* hopeless for a 7-joint arm while RRT is not?</b></p><p class="cap">The grid has about 10¹⁴ cells. RRT never enumerates the space: it samples points and collision-checks them.</p></div>
+<div class="card" style="padding:24px 28px"><p class="label blue">5 · Path quality</p><p class="cap" style="color:#16242E"><b>RRT returned a path. Is it the shortest? What next?</b></p><p class="cap">No, only feasible. Shortcut and smooth it, hand it to a trajectory optimizer, or run RRT* for longer.</p></div>
+<div class="card" style="padding:24px 28px"><p class="label blue">6 · Optimization</p><p class="cap" style="color:#16242E"><b>A trajectory optimizer keeps converging to a path through an obstacle. Two fixes?</b></p><p class="cap">Seed it with a path from a sampling planner. Or restart from several random guesses and keep the best.</p></div>
+</div>
+<p class="cap" style="margin-top:auto">Cover the grey answer, decide, then compare. Questions 1 and 2 can be checked with Lab 1.</p>
+<p class="foot">Part 6 · Hands-on</p>
+</section>
+<!-- 46 · ex2 -->
+<section id="ex2" data-transition="fade">
+<div class="head"><p class="eyebrow">Exercises</p><h2>Check yourself: learning and simulation</h2></div>
+<div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:24px">
+<div class="card" style="padding:24px 28px"><p class="label orange">1 · Behaviour cloning</p><p class="cap" style="color:#16242E"><b>A cloned policy has low validation loss but fails when rolled out. Why?</b></p><p class="cap">Validation uses states the expert visited. In a rollout the policy’s own errors lead to unseen states, where errors compound.</p></div>
+<div class="card" style="padding:24px 28px"><p class="label orange">2 · Multimodality</p><p class="cap" style="color:#16242E"><b>Demos pass an obstacle on either side. What does an MSE-trained policy do?</b></p><p class="cap">It outputs the average and drives at the obstacle. Model the distribution instead: diffusion, flow, tokens or a CVAE.</p></div>
+<div class="card" style="padding:24px 28px"><p class="label orange">3 · Diffusion policy</p><p class="cap" style="color:#16242E"><b>Sampling takes tens of network calls. How can it control at 10 Hz or more?</b></p><p class="cap">Action chunking: one sample yields many future actions, and several run before re-sampling. Fewer-step samplers help too.</p></div>
+<div class="card" style="padding:24px 28px"><p class="label orange">4 · Sim-to-real</p><p class="cap" style="color:#16242E"><b>A policy trained in simulation shakes on the real robot. Three likely causes?</b></p><p class="cap">Actuator delay, wrong friction or damping, sensor noise. Randomize them in training, or measure them and fix the model.</p></div>
+<div class="card" style="padding:24px 28px"><p class="label orange">5 · Simulation</p><p class="cap" style="color:#16242E"><b>The physics step is 2 ms and the policy runs at 25 Hz. How many steps per action?</b></p><p class="cap">One action lasts 40 ms, so 20 physics steps.</p></div>
+<div class="card" style="padding:24px 28px"><p class="label orange">6 · Judgement</p><p class="cap" style="color:#16242E"><b>When is a classical planner the better choice than a learned policy?</b></p><p class="cap">Known geometry, a need for guarantees, tasks that differ only by goal, and no data: a typical industrial cell.</p></div>
+</div>
+<p class="cap" style="margin-top:auto">Question 1 is what Lab 4 demonstrates when you cut the number of demonstrations.</p>
+<p class="foot">Part 6 · Hands-on</p>
+</section>
+<!-- 47 · next -->
+<section id="next" data-transition="fade">
+<div class="head"><p class="eyebrow">Roadmap</p><h2>Where to go from here</h2></div>
+<div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:24px">
+<div class="card in" style="--i:0; padding:24px 26px"><p class="tag">Weeks 1–2</p><h3>Foundations</h3><p class="cap">Finish Labs 0 to 3. Repeat Lab 3 with a Franka arm from MuJoCo Menagerie.</p><p class="cap"><b>Read.</b> Lynch and Park, Modern Robotics, chapters 2 to 6: configuration space through inverse kinematics.</p></div>
+<div class="card in" style="--i:1; padding:24px 26px"><p class="tag">Weeks 3–4</p><h3>Planning</h3><p class="cap">Add RRT* and shortcut smoothing to Lab 2. Work through the MoveIt 2 and OMPL tutorials.</p><p class="cap"><b>Read.</b> LaValle, Planning Algorithms, chapter 5 on sampling-based planning.</p></div>
+<div class="card in" style="--i:2; padding:24px 26px"><p class="tag warm">Weeks 5–8</p><h3>Learning</h3><p class="cap">With LeRobot, train ACT and Diffusion Policy on its simulated tasks. Train PPO in MuJoCo Playground or Isaac Lab.</p><p class="cap"><b>Read.</b> The Diffusion Policy and ACT papers. Sutton and Barto, chapter 13.</p></div>
+<div class="card in" style="--i:3; padding:24px 26px"><p class="tag warm">After that</p><h3>Generalist models</h3><p class="cap">Fine-tune SmolVLA or OpenVLA on a simulated benchmark such as LIBERO. Then consider a low-cost real arm.</p><p class="cap"><b>Read.</b> The RT-2, OpenVLA and π0 papers.</p></div>
+</div>
+<div class="panel" style="margin-top:auto"><p class="label blue">Free references worth bookmarking</p><p class="cap">Modern Robotics (book and video lectures) · Planning Algorithms (online) · Russ Tedrake’s Robotic Manipulation course notes · the MuJoCo documentation · the LeRobot documentation · OpenAI Spinning Up for RL</p></div>
+<p class="foot">Part 6 · Hands-on</p>
+</section>
+<!-- 48 · closing -->
+<section id="closing" class="dark" data-transition="fade">
+<div class="head"><p class="eyebrow">Summary</p><h2>Eight ideas to keep</h2></div>
+<div style="display:grid; grid-template-columns:72px 1fr 72px 1fr; column-gap:24px; row-gap:26px; align-items:start">
+<p class="lead blue">1</p><p class="soft">A robot is a feedback loop. A plan is only as good as the loop that tracks it.</p>
+<p class="lead blue">5</p><p class="soft">Grids die with dimension, sampling scales, optimization polishes, reactive layers absorb surprises.</p>
+<p class="lead blue">2</p><p class="soft">The robot lives in joint space; the job lives in task space. FK is easy, IK is not.</p>
+<p class="lead blue">6</p><p class="soft">A path becomes a trajectory only when it has a clock and respects the limits.</p>
+<p class="lead blue">3</p><p class="soft">The Jacobian links the two spaces: velocities, forces, singularities, numerical IK.</p>
+<p class="lead orange">7</p><p class="soft">Learning swaps models for data. Cloning is supervised learning with a feedback problem; RL needs simulation.</p>
+<p class="lead blue">4</p><p class="soft">In configuration space the robot is a point, and planning is a search through free space.</p>
+<p class="lead orange">8</p><p class="soft">The strongest systems are hybrids: learned policies inside classical limits and checks.</p>
+</div>
+<p class="lead" style="margin-top:auto">Next step: open a terminal and run Lab 0.</p>
+<p class="foot">Robot Motion Planning &amp; Learning 101</p>
+</section>
+    </div>
+  </main>
+
+  <nav class="bar" aria-label="Slide controls">
+    <button id="prev" type="button" aria-label="Previous slide" title="Previous (←)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 L8 12 L15 19"/></svg></button>
+    <span class="bar__count" id="count" aria-live="polite">1 / 48</span>
+    <button id="next" type="button" aria-label="Next slide" title="Next (→)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5 L16 12 L9 19"/></svg></button>
+    <span class="bar__sep" aria-hidden="true"></span>
+    <select id="part" aria-label="Jump to part" title="Jump to part">
+        <option value="1">Introduction</option>
+        <option value="3">Part 1 · Background</option>
+        <option value="7">Part 2 · Motion and control</option>
+        <option value="15">Part 3 · Motion planning</option>
+        <option value="27">Part 4 · Robot learning</option>
+        <option value="36">Part 5 · Simulation</option>
+        <option value="38">Part 6 · Hands-on</option>
+    </select>
+    <button id="full" type="button" aria-label="Toggle full screen" title="Full screen (F)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9 V4 H9 M15 4 H20 V9 M20 15 V20 H15 M9 20 H4 V15"/></svg></button>
+    <span class="bar__sep" aria-hidden="true"></span>
+    <a class="bar__home" href="https://khanhnd61-vr.github.io/">Home ↗</a>
+  </nav>
+
+  <script src="assets/viewer.js"></script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+/* Robotics 101: the page around the slides.
+   Loaded before deck.css, which holds the look of the slides themselves. */
+
+* { margin: 0; }
+html, body { height: 100%; }
+html { background: #0A141B; }
+body { font: 32px/1.2 sans-serif; overflow: hidden; }
+
+/* ---- Stage: one 1920 x 1080 canvas, scaled to fit the window by viewer.js ---- */
+.stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+.deck > section {
+  position: absolute; left: 0; top: 0; width: 1920px; height: 1080px;
+  overflow: hidden; box-sizing: border-box; isolation: isolate;
+}
+.deck > section:not(.active) { display: none; }
+.deck > section.active { animation: deck-fade 0.28s ease-out; }
+@keyframes deck-fade { from { opacity: 0; } }
+
+/* ---- Element defaults the slides were laid out against ---- */
+h1 { font-size: 96px; font-weight: 600; }
+h2 { font-size: 64px; font-weight: 600; }
+h3 { font-size: 44px; font-weight: 600; }
+p, li, h1, h2, h3, td, th { overflow-wrap: break-word; text-wrap: pretty; }
+table { width: 100%; border-collapse: separate; border-spacing: 0; border: solid rgba(0, 0, 0, 0.2); border-width: 2px 0 0 2px; }
+th, td { padding: 0.35em 0.6em; text-align: left; border: solid rgba(0, 0, 0, 0.2); border-width: 0 2px 2px 0; }
+aside { display: none; }
+
+/* ---- Slide building blocks drawn by viewer.js ---- */
+x-shape, x-embed, x-connector { display: block; }
+x-shape[kind="ellipse"] { border-radius: 50%; }
+x-embed iframe { display: block; width: 100%; height: 100%; border: 0; pointer-events: none; }
+
+/* ---- Toolbar ---- */
+.bar {
+  position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 4px; padding: 5px 8px;
+  font: 500 14px/1 system-ui, -apple-system, "Segoe UI", sans-serif; color: #E9EEF0;
+  background: rgba(16, 32, 43, 0.92); border: 1px solid #2C4657; border-radius: 999px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  transition: opacity 0.3s ease;
+}
+body.idle .bar:not(:hover):not(:focus-within) { opacity: 0; }
+.bar button, .bar a, .bar select {
+  font: inherit; color: inherit; background: none; border: 0; border-radius: 999px;
+  height: 40px; min-width: 40px; padding: 0 10px; cursor: pointer; text-decoration: none;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.bar button:hover:not(:disabled), .bar a:hover, .bar select:hover { background: #1F3B57; }
+.bar button:disabled { opacity: 0.35; cursor: default; }
+.bar button:focus-visible, .bar a:focus-visible, .bar select:focus-visible { outline: 2px solid #7DB3FF; outline-offset: 1px; }
+.bar svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.bar__count { min-width: 64px; text-align: center; font-variant-numeric: tabular-nums; color: #A9BAC2; }
+.bar select { appearance: none; -webkit-appearance: none; padding: 0 14px; max-width: 46vw; }
+.bar select option { color: #16242E; background: #F6F4EE; }
+.bar__sep { width: 1px; height: 22px; background: #2C4657; margin: 0 4px; }
+
+.noscript { position: fixed; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: #E9EEF0; font: 18px/1.5 system-ui, sans-serif; }
+
+@media (max-width: 560px) {
+  .bar { gap: 0; padding: 4px; }
+  .bar__sep, .bar .bar__home { display: none; }
+}
